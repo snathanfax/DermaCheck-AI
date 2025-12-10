@@ -624,6 +624,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
               {abcdeData.map((item) => {
                 const isSuspicious = item.status === 'Suspicious';
                 const isBenign = item.status === 'Benign';
+                const isUnknown = item.status === 'Unknown';
                 
                 let cardBg = 'bg-slate-50 border-slate-200';
                 let icon = <HelpCircle className="w-5 h-5 text-slate-400" />;
@@ -637,6 +638,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                   cardBg = 'bg-green-50 border-green-200';
                   icon = <CheckCircle className="w-5 h-5 text-green-500" />;
                   titleColor = 'text-green-800';
+                } else if (isUnknown) {
+                  cardBg = 'bg-amber-50 border-amber-200';
+                  icon = <HelpCircle className="w-5 h-5 text-amber-500" />;
+                  titleColor = 'text-amber-800';
                 }
 
                 // Get static educational context, with handling for Unknown
@@ -647,7 +652,12 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                   <div key={item.letter} className={`p-3 rounded-lg border ${cardBg} transition-all`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className={`flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${isSuspicious ? 'bg-red-200 text-red-800' : isBenign ? 'bg-green-200 text-green-800' : 'bg-slate-200 text-slate-700'}`}>
+                        <span className={`flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${
+                            isSuspicious ? 'bg-red-200 text-red-800' : 
+                            isBenign ? 'bg-green-200 text-green-800' : 
+                            isUnknown ? 'bg-amber-200 text-amber-800' :
+                            'bg-slate-200 text-slate-700'
+                        }`}>
                           {item.letter}
                         </span>
                         <span className={`font-semibold text-sm ${titleColor}`}>{item.title}</span>
@@ -663,8 +673,13 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                        
                        {/* Educational Context Tip */}
                        {contextText && (
-                         <div className={`text-xs p-2 rounded border ${isSuspicious ? 'bg-white/60 border-red-100 text-red-600' : isBenign ? 'bg-white/60 border-green-100 text-green-700' : 'bg-white/60 border-slate-200 text-slate-600'}`}>
-                            <span className="font-bold block mb-0.5">{isSuspicious ? 'Risk Factor:' : isBenign ? 'Typical Norm:' : 'Why Unknown?'}</span>
+                         <div className={`text-xs p-2 rounded border ${
+                             isSuspicious ? 'bg-white/60 border-red-100 text-red-600' : 
+                             isBenign ? 'bg-white/60 border-green-100 text-green-700' : 
+                             isUnknown ? 'bg-white/60 border-amber-200 text-amber-800' :
+                             'bg-white/60 border-slate-200 text-slate-600'
+                         }`}>
+                            <span className="font-bold block mb-0.5">{isSuspicious ? 'Risk Factor:' : isBenign ? 'Typical Norm:' : 'Missing Information:'}</span>
                             {contextText}
                          </div>
                        )}
