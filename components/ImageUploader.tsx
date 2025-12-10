@@ -663,7 +663,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                <button
                   onClick={resetCameraSettings}
                   className="bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors backdrop-blur-md"
-                  title="Reset All Settings"
+                  title="Reset Settings (Zoom, Flash, Resolution)"
                >
                   <RefreshCw className="w-5 h-5" />
                </button>
