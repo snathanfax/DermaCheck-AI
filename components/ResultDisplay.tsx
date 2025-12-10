@@ -347,7 +347,17 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
             yPos += Math.max(imgHeight + 15, 50);
         } catch (e) {
             console.error("Error adding image to PDF", e);
-            yPos += 10;
+            // If image fails, still show confidence
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text("AI ANALYSIS CONFIDENCE:", margin, yPos);
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.setTextColor(30, 64, 175);
+            doc.text(confidenceScore, margin, yPos + 10);
+            yPos += 30;
         }
     } else {
          // Confidence Score without image
