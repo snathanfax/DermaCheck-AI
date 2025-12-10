@@ -199,7 +199,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   };
 
   const resetCameraSettings = async () => {
+    const defaultResolution = 'FHD';
     const defaultZoom = capabilities?.zoom?.min || 1;
+
+    // If resolution is not default, changing it triggers useEffect -> startCamera -> resets everything
+    if (resolution !== defaultResolution) {
+      setResolution(defaultResolution);
+      return;
+    }
+
+    // Resolution matches default, manually reset zoom and torch
     setZoom(defaultZoom);
     setTorch(false);
     
@@ -651,7 +660,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                <button
                   onClick={resetCameraSettings}
                   className="bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors backdrop-blur-md"
-                  title="Reset Camera Settings"
+                  title="Reset All Settings"
                >
                   <RefreshCw className="w-5 h-5" />
                </button>
