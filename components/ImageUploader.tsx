@@ -1,11 +1,21 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Settings, Monitor } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
   onImageSelect: (base64: string, mimeType: string) => void;
   onClear: () => void;
   isAnalyzing: boolean;
+}
+
+// Extended interface for MediaTrackCapabilities to include zoom and torch
+interface ExtendedMediaTrackCapabilities extends MediaTrackCapabilities {
+  zoom?: {
+    min: number;
+    max: number;
+    step: number;
+  };
+  torch?: boolean;
 }
 
 // Utility to create an image element from a URL
@@ -57,8 +67,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   const [cameraError, setCameraError] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  
+  // Camera Controls State
+  const [resolution, setResolution] = useState<'HD' | 'FHD' | '4K'>('FHD');
+  const [torch, setTorch] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [capabilities, setCapabilities] = useState<ExtendedMediaTrackCapabilities | null>(null);
+  const [showResMenu, setShowResMenu] = useState(false);
 
-  // Zoom/Pan State
+  // Zoom/Pan State (Preview)
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -73,41 +90,111 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   // Clean up camera stream when component unmounts
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
   }, []);
 
-  // Initialize camera stream when isCameraOpen becomes true
-  useEffect(() => {
-    if (isCameraOpen && !streamRef.current) {
-      const initCamera = async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' } 
-          });
-          streamRef.current = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } catch (err) {
-          console.error("Camera error:", err);
-          setCameraError("Unable to access camera. Please allow permissions.");
-          setIsCameraOpen(false);
-        }
-      };
-      initCamera();
-    }
-  }, [isCameraOpen]);
-
-  const handleStopCamera = () => {
+  const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        // Reset constraints if needed (e.g. turn off torch)
+        if (track.kind === 'video') {
+            // stopping the track usually turns off the torch automatically
+        }
+      });
       streamRef.current = null;
     }
     setIsCameraOpen(false);
     setCameraError(null);
+    setTorch(false);
+    setZoom(1);
+  };
+
+  const getResolutionConstraints = (res: 'HD' | 'FHD' | '4K') => {
+    switch (res) {
+      case '4K': return { width: { ideal: 3840 }, height: { ideal: 2160 } };
+      case 'FHD': return { width: { ideal: 1920 }, height: { ideal: 1080 } };
+      case 'HD': default: return { width: { ideal: 1280 }, height: { ideal: 720 } };
+    }
+  };
+
+  const startCamera = async () => {
+    // Stop any existing stream first
+    if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+    }
+
+    try {
+      const constraints = {
+        video: {
+          facingMode: 'environment',
+          ...getResolutionConstraints(resolution)
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+
+      // Get capabilities for Zoom and Flash
+      const track = stream.getVideoTracks()[0];
+      if (track.getCapabilities) {
+        const caps = track.getCapabilities() as ExtendedMediaTrackCapabilities;
+        setCapabilities(caps);
+        // Set initial zoom if available
+        if (caps.zoom) {
+            setZoom(caps.zoom.min || 1);
+        }
+      }
+      setTorch(false); // Reset torch state on new stream
+
+    } catch (err) {
+      console.error("Camera error:", err);
+      setCameraError("Unable to access camera. Please allow permissions.");
+      setIsCameraOpen(false);
+    }
+  };
+
+  // Initialize camera when isCameraOpen changes or resolution changes
+  useEffect(() => {
+    if (isCameraOpen) {
+      startCamera();
+    } else {
+        stopCamera();
+    }
+  }, [isCameraOpen, resolution]);
+
+  const toggleTorch = async () => {
+    if (streamRef.current && capabilities?.torch) {
+      const track = streamRef.current.getVideoTracks()[0];
+      try {
+        await track.applyConstraints({
+          advanced: [{ torch: !torch }]
+        } as any);
+        setTorch(!torch);
+      } catch (e) {
+        console.error("Failed to toggle torch", e);
+      }
+    }
+  };
+
+  const handleZoomChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newZoom = parseFloat(e.target.value);
+    setZoom(newZoom);
+    if (streamRef.current && capabilities?.zoom) {
+      const track = streamRef.current.getVideoTracks()[0];
+      try {
+        await track.applyConstraints({
+          advanced: [{ zoom: newZoom }]
+        } as any);
+      } catch (e) {
+        console.error("Failed to set zoom", e);
+      }
+    }
   };
 
   const handleCapture = () => {
@@ -131,7 +218,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           setIsEnhanced(false);
           resetZoom();
           onImageSelect(base64Data, mimeType);
-          handleStopCamera();
+          stopCamera();
         }
       }
     }
@@ -196,8 +283,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     if (!originalImage) return;
 
     if (isEnhanced) {
-      // Revert to original (or cropped original if we implemented history properly, 
-      // but for now originalImage holds the baseline)
       setPreview(originalImage);
       const match = originalImage.match(/^data:(.+);base64,(.+)$/);
       if (match) {
@@ -205,12 +290,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
       }
       setIsEnhanced(false);
     } else {
-      // Apply enhancements
       const img = new Image();
-      // Ensure we enhance the CURRENT preview (which might be a cropped version)
-      // Actually, standard behavior is usually enhance source. 
-      // If we cropped, originalImage should be updated.
-      // So we use originalImage as source.
       img.src = originalImage;
       await new Promise(r => img.onload = r);
 
@@ -461,24 +541,81 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           className="w-full h-full object-cover flex-1"
         />
         
-        {/* Camera Overlay Controls */}
-        <div className="absolute top-4 right-4 z-10">
-           <button
-            onClick={handleStopCamera}
-            className="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
+        {/* Top Controls Bar (Resolution & Flash) */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex items-start justify-between z-20 bg-gradient-to-b from-black/60 to-transparent">
+           <div className="relative">
+              <button 
+                 onClick={() => setShowResMenu(!showResMenu)}
+                 className="flex items-center gap-1.5 text-xs font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 hover:bg-black/60 transition-colors"
+              >
+                 <Monitor className="w-3 h-3" /> {resolution}
+              </button>
+              
+              {showResMenu && (
+                  <div className="absolute top-full left-0 mt-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden flex flex-col shadow-xl animate-in fade-in zoom-in-95 duration-150">
+                     {(['HD', 'FHD', '4K'] as const).map(res => (
+                         <button
+                            key={res}
+                            onClick={() => {
+                                setResolution(res);
+                                setShowResMenu(false);
+                            }}
+                            className={`px-4 py-2 text-xs text-left hover:bg-white/20 transition-colors ${resolution === res ? 'text-blue-400 font-bold' : 'text-white'}`}
+                         >
+                            {res}
+                         </button>
+                     ))}
+                  </div>
+              )}
+           </div>
+
+           <div className="flex gap-4">
+               {capabilities?.torch && (
+                   <button
+                    onClick={toggleTorch}
+                    className={`p-2 rounded-full transition-colors backdrop-blur-md ${torch ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-black/40 text-white hover:bg-black/60'}`}
+                   >
+                       {torch ? <Zap className="w-5 h-5 fill-black" /> : <ZapOff className="w-5 h-5" />}
+                   </button>
+               )}
+               <button
+                onClick={stopCamera}
+                className="bg-black/40 text-white p-2 rounded-full hover:bg-red-500/80 transition-colors backdrop-blur-md"
+              >
+                <X className="w-5 h-5" />
+              </button>
+           </div>
         </div>
 
-        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
+        {/* Bottom Area */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center z-20 bg-gradient-to-t from-black/80 via-black/40 to-transparent pt-12">
+          
+          {/* Zoom Slider */}
+          {capabilities?.zoom && (
+              <div className="w-full max-w-[200px] mb-6 flex items-center gap-3">
+                  <span className="text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">1x</span>
+                  <input
+                    type="range"
+                    min={capabilities.zoom.min || 1}
+                    max={Math.min(capabilities.zoom.max || 4, 8)} // Limit max zoom UI to 8x even if hardware supports more
+                    step={0.1}
+                    value={zoom}
+                    onChange={handleZoomChange}
+                    className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-lg"
+                  />
+                  <span className="text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">
+                      {Math.round(zoom * 10) / 10}x
+                  </span>
+              </div>
+          )}
+
           <button
             onClick={handleCapture}
             className="group relative"
             aria-label="Capture photo"
           >
-             <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center transition-transform transform group-active:scale-90">
-               <div className="w-12 h-12 bg-white rounded-full"></div>
+             <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center transition-transform transform group-active:scale-95 shadow-lg">
+               <div className="w-14 h-14 bg-white rounded-full border-2 border-slate-300 group-hover:bg-slate-100 transition-colors"></div>
              </div>
           </button>
         </div>

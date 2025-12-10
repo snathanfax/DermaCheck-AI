@@ -559,13 +559,23 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
             </div>
           </div>
           
-          <button 
-             onClick={() => setShowShareModal(true)}
-             className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}
-             title="Share Results"
-          >
-             <Share2 className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1">
+              <button 
+                 onClick={handleGeneratePDF}
+                 className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}
+                 title="Download PDF Report"
+              >
+                 <FileText className="w-5 h-5" />
+              </button>
+
+              <button 
+                 onClick={() => setShowShareModal(true)}
+                 className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}
+                 title="Share Results"
+              >
+                 <Share2 className="w-5 h-5" />
+              </button>
+          </div>
         </div>
 
         <div className="px-6 pt-6">

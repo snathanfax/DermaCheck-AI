@@ -4,7 +4,7 @@ import { ImageUploader } from './components/ImageUploader';
 import { ResultDisplay } from './components/ResultDisplay';
 import { analyzeImage } from './services/geminiService';
 import { AnalysisState, HistoryItem } from './types';
-import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle } from 'lucide-react';
+import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut } from 'lucide-react';
 import LZString from 'lz-string';
 
 const HISTORY_STORAGE_KEY = 'dermacheck_history_v1';
@@ -349,7 +349,7 @@ const App: React.FC = () => {
                        {getProgressLabel()}
                      </p>
                   </div>
-                ) : (
+                ) : analysis.status !== 'success' && (
                   <>
                     <div className="flex items-center gap-3 mb-4">
                       <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">2</span>
@@ -362,6 +362,14 @@ const App: React.FC = () => {
                     >
                         <Sparkles className="h-6 w-6" />
                         Run AI Analysis
+                    </button>
+
+                    <button
+                      onClick={handleClear}
+                      className="mt-3 w-full py-3 px-6 rounded-xl font-medium text-slate-500 border border-transparent hover:bg-slate-100 hover:text-slate-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        Reset
                     </button>
                   </>
                 )}
@@ -380,6 +388,19 @@ const App: React.FC = () => {
           {analysis.status === 'success' && analysis.result && (
             <div id="results-section">
                 <ResultDisplay result={analysis.result} image={selectedImage} />
+
+                <div className="mt-8 flex justify-center pb-4">
+                  <button
+                      onClick={() => {
+                          handleClear();
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-full font-bold shadow-lg hover:bg-slate-900 hover:shadow-xl transition-all transform hover:scale-105"
+                  >
+                      <LogOut className="w-4 h-4" />
+                      Exit Program
+                  </button>
+                </div>
             </div>
           )}
 
