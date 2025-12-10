@@ -484,8 +484,8 @@ const App: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
                         <Calendar className="w-3 h-3" />
-                        {new Date(item.timestamp).toLocaleDateString()}
-                        <span className="mx-1">•</span>
+                        {new Date(item.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        <span className="mx-1 text-slate-300">|</span>
                         <Clock className="w-3 h-3" />
                         {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
