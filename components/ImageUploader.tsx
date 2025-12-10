@@ -198,6 +198,38 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     }
   };
 
+  const resetCameraSettings = async () => {
+    const defaultZoom = capabilities?.zoom?.min || 1;
+    setZoom(defaultZoom);
+    setTorch(false);
+    
+    if (streamRef.current) {
+      const track = streamRef.current.getVideoTracks()[0];
+      
+      // Reset Torch
+      if (capabilities?.torch) {
+        try {
+          await track.applyConstraints({
+            advanced: [{ torch: false }]
+          } as any);
+        } catch (e) {
+          console.error("Failed to reset torch", e);
+        }
+      }
+      
+      // Reset Zoom
+      if (capabilities?.zoom) {
+        try {
+          await track.applyConstraints({
+            advanced: [{ zoom: defaultZoom }]
+          } as any);
+        } catch (e) {
+          console.error("Failed to reset zoom", e);
+        }
+      }
+    }
+  };
+
   const handleCapture = () => {
     if (videoRef.current) {
       const canvas = document.createElement('canvas');
@@ -610,13 +642,24 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                    <button
                     onClick={toggleTorch}
                     className={`p-2 rounded-full transition-colors backdrop-blur-md ${torch ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-black/40 text-white hover:bg-black/60'}`}
+                    title="Toggle Flash"
                    >
                        {torch ? <Zap className="w-5 h-5 fill-black" /> : <ZapOff className="w-5 h-5" />}
                    </button>
                )}
+               
+               <button
+                  onClick={resetCameraSettings}
+                  className="bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors backdrop-blur-md"
+                  title="Reset Camera Settings"
+               >
+                  <RefreshCw className="w-5 h-5" />
+               </button>
+
                <button
                 onClick={stopCamera}
                 className="bg-black/40 text-white p-2 rounded-full hover:bg-red-500/80 transition-colors backdrop-blur-md"
+                title="Close Camera"
               >
                 <X className="w-5 h-5" />
               </button>
