@@ -513,7 +513,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
       
       if (isKeyword) {
          return (
-           <strong {...props} className="inline-block px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold border border-indigo-100 shadow-sm mx-0.5">
+           <strong {...props} className="inline-block px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-900 font-extrabold border border-indigo-200 shadow-sm mx-0.5 transform hover:scale-105 transition-transform">
              {children}
            </strong>
          );
