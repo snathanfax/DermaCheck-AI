@@ -1,5 +1,6 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check } from 'lucide-react';
+import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
   onImageSelect: (base64: string, mimeType: string) => void;
@@ -7,8 +8,48 @@ interface ImageUploaderProps {
   isAnalyzing: boolean;
 }
 
+// Utility to create an image element from a URL
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+// Utility to crop the image using canvas
+async function getCroppedImg(imageSrc: string, pixelCrop: any) {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    return null;
+  }
+
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+
+  return canvas.toDataURL('image/jpeg', 0.95);
+}
+
 export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onClear, isAnalyzing }) => {
   const [preview, setPreview] = useState<string | null>(null);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [isEnhanced, setIsEnhanced] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   
   // Camera State
@@ -22,6 +63,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  // Crop State
+  const [isCropping, setIsCropping] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [cropZoom, setCropZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   // Clean up camera stream when component unmounts
   useEffect(() => {
@@ -80,6 +127,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           const mimeType = match[1];
           const base64Data = match[2];
           setPreview(dataUrl);
+          setOriginalImage(dataUrl);
+          setIsEnhanced(false);
           resetZoom();
           onImageSelect(base64Data, mimeType);
           handleStopCamera();
@@ -98,6 +147,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           const mimeType = match[1];
           const base64Data = match[2];
           setPreview(result);
+          setOriginalImage(result);
+          setIsEnhanced(false);
           resetZoom();
           onImageSelect(base64Data, mimeType);
         }
@@ -134,9 +185,55 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   const clearImage = () => {
     setPreview(null);
+    setOriginalImage(null);
+    setIsEnhanced(false);
     resetZoom();
+    setIsCropping(false);
     onClear();
   };
+
+  const toggleEnhance = useCallback(async () => {
+    if (!originalImage) return;
+
+    if (isEnhanced) {
+      // Revert to original (or cropped original if we implemented history properly, 
+      // but for now originalImage holds the baseline)
+      setPreview(originalImage);
+      const match = originalImage.match(/^data:(.+);base64,(.+)$/);
+      if (match) {
+        onImageSelect(match[2], match[1]);
+      }
+      setIsEnhanced(false);
+    } else {
+      // Apply enhancements
+      const img = new Image();
+      // Ensure we enhance the CURRENT preview (which might be a cropped version)
+      // Actually, standard behavior is usually enhance source. 
+      // If we cropped, originalImage should be updated.
+      // So we use originalImage as source.
+      img.src = originalImage;
+      await new Promise(r => img.onload = r);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Apply filters for mole optimization (contrast + brightness + saturation)
+      ctx.filter = 'contrast(1.2) brightness(1.05) saturate(1.1)';
+      ctx.drawImage(img, 0, 0);
+
+      const enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      setPreview(enhancedDataUrl);
+      
+      const match = enhancedDataUrl.match(/^data:(.+);base64,(.+)$/);
+      if (match) {
+        onImageSelect(match[2], match[1]);
+      }
+      setIsEnhanced(true);
+    }
+  }, [originalImage, isEnhanced, onImageSelect]);
 
   // Zoom Logic
   const resetZoom = () => {
@@ -185,78 +282,169 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     setIsDragging(false);
   };
 
+  // Crop Logic
+  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const performCrop = async () => {
+    if (preview && croppedAreaPixels) {
+      try {
+        const croppedImage = await getCroppedImg(preview, croppedAreaPixels);
+        if (croppedImage) {
+          setPreview(croppedImage);
+          setOriginalImage(croppedImage); // Update original so enhance works on cropped version
+          setIsEnhanced(false); // Reset enhance state as we have a new "original"
+          
+          const match = croppedImage.match(/^data:(.+);base64,(.+)$/);
+          if (match) {
+            onImageSelect(match[2], match[1]);
+          }
+          setIsCropping(false);
+          resetZoom();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
   if (preview) {
     return (
       <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-xl border-4 border-white bg-slate-900 group select-none">
-        {/* Zoom Controls Overlay */}
-        {!isAnalyzing && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center gap-2 bg-slate-900/70 backdrop-blur-md p-1.5 rounded-full border border-slate-700 shadow-lg transition-opacity duration-200">
-                <button 
-                  onClick={handleZoomOut} 
-                  className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                  disabled={scale <= 1}
-                  title="Zoom Out"
-                >
-                    <ZoomOut className="w-4 h-4" />
-                </button>
-                <span className="text-xs font-medium text-white min-w-[32px] text-center font-mono">
-                  {Math.round(scale * 100)}%
-                </span>
-                <button 
-                  onClick={handleZoomIn} 
-                  className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                  disabled={scale >= 4}
-                  title="Zoom In"
-                >
-                    <ZoomIn className="w-4 h-4" />
-                </button>
-                <div className="w-px h-4 bg-slate-600 mx-1"></div>
-                <button 
-                  onClick={handleResetZoom} 
-                  className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors" 
-                  title="Reset View"
-                >
-                    <Maximize className="w-4 h-4" />
-                </button>
+        
+        {/* Crop Mode Overlay */}
+        {isCropping ? (
+           <div className="relative w-full h-[400px] bg-black">
+              <Cropper
+                image={preview}
+                crop={crop}
+                zoom={cropZoom}
+                aspect={undefined} // Free crop
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setCropZoom}
+                objectFit="contain"
+              />
+              <div className="absolute bottom-4 left-0 right-0 z-50 flex items-center justify-center gap-4">
+                 <button
+                   onClick={() => setIsCropping(false)}
+                   className="flex items-center gap-2 px-4 py-2 bg-red-600/90 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors backdrop-blur-sm"
+                 >
+                   <X className="w-4 h-4" /> Cancel
+                 </button>
+                 <button
+                   onClick={performCrop}
+                   className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm"
+                 >
+                   <Check className="w-4 h-4" /> Apply Crop
+                 </button>
+              </div>
+           </div>
+        ) : (
+          <>
+            {/* Zoom Controls Overlay */}
+            {!isAnalyzing && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center gap-2 bg-slate-900/70 backdrop-blur-md p-1.5 rounded-full border border-slate-700 shadow-lg transition-opacity duration-200">
+                    <button 
+                    onClick={handleZoomOut} 
+                    className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                    disabled={scale <= 1}
+                    title="Zoom Out"
+                    >
+                        <ZoomOut className="w-4 h-4" />
+                    </button>
+                    <span className="text-xs font-medium text-white min-w-[32px] text-center font-mono">
+                    {Math.round(scale * 100)}%
+                    </span>
+                    <button 
+                    onClick={handleZoomIn} 
+                    className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
+                    disabled={scale >= 4}
+                    title="Zoom In"
+                    >
+                        <ZoomIn className="w-4 h-4" />
+                    </button>
+                    <div className="w-px h-4 bg-slate-600 mx-1"></div>
+                    <button 
+                    onClick={handleResetZoom} 
+                    className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors" 
+                    title="Reset View"
+                    >
+                        <Maximize className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
+            <div 
+                className="overflow-hidden w-full h-full relative flex items-center justify-center bg-black"
+                style={{ 
+                    cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+                    minHeight: '300px'
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+            >
+                <img 
+                src={preview} 
+                alt="Upload preview" 
+                className="w-full h-auto object-contain max-h-[500px] transition-transform duration-100 ease-out will-change-transform"
+                style={{ 
+                    transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`
+                }}
+                draggable={false}
+                />
             </div>
-          )}
 
-          <div 
-            className="overflow-hidden w-full h-full relative flex items-center justify-center bg-black"
-            style={{ 
-                cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                minHeight: '300px'
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-             <img 
-               src={preview} 
-               alt="Upload preview" 
-               className="w-full h-auto object-contain max-h-[500px] transition-transform duration-100 ease-out will-change-transform"
-               style={{ 
-                 transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`
-               }}
-               draggable={false}
-             />
-          </div>
+            {!isAnalyzing && (
+            <>
+                <div className="absolute top-4 left-4 z-20 flex flex-col gap-3">
+                    {/* Auto Enhance Button */}
+                    <button
+                        onClick={toggleEnhance}
+                        className={`p-2 rounded-full shadow-lg transition-all transform hover:scale-105 ${
+                            isEnhanced 
+                            ? 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-white/50' 
+                            : 'bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white'
+                        }`}
+                        title={isEnhanced ? "Revert to Original" : "Auto-Enhance Image"}
+                    >
+                        <Wand2 className="w-5 h-5" />
+                    </button>
+                    
+                    {/* Crop Button */}
+                    <button
+                        onClick={() => {
+                          setIsCropping(true);
+                          setCrop({ x: 0, y: 0 });
+                          setCropZoom(1);
+                        }}
+                        className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105"
+                        title="Crop Image"
+                    >
+                        <Scissors className="w-5 h-5" />
+                    </button>
+                </div>
 
-        {!isAnalyzing && (
-          <button
-            onClick={clearImage}
-            className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-lg transition-all transform hover:scale-105"
-            title="Clear Image"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
+                {/* Clear Button */}
+                <button
+                onClick={clearImage}
+                className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-lg transition-all transform hover:scale-105"
+                title="Clear Image"
+                >
+                <X className="w-5 h-5" />
+                </button>
+            </>
+            )}
 
-        {scale > 1 && !isDragging && (
-            <div className="absolute top-4 left-4 z-10 bg-black/40 backdrop-blur-sm text-white px-2 py-1 rounded text-[10px] pointer-events-none flex items-center gap-1 animate-in fade-in duration-300">
-                <Move className="w-3 h-3" /> Drag to pan
-            </div>
+            {scale > 1 && !isDragging && (
+                <div className="absolute top-16 left-4 z-10 bg-black/40 backdrop-blur-sm text-white px-2 py-1 rounded text-[10px] pointer-events-none flex items-center gap-1 animate-in fade-in duration-300">
+                    <Move className="w-3 h-3" /> Drag to pan
+                </div>
+            )}
+          </>
         )}
       </div>
     );

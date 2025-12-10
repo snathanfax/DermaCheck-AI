@@ -422,11 +422,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
   const markdownComponents: Components = {
     strong: ({node, children, ...props}) => {
       const textContent = String(children);
-      const isKeyword = /Asymmetry|Border|Color|Diameter|Evolving/i.test(textContent);
+      const isKeyword = /^(Asymmetry|Border|Color|Diameter|Evolving)$/i.test(textContent.trim());
       
       if (isKeyword) {
          return (
-           <strong {...props} className="font-extrabold text-blue-700 bg-blue-50 px-1 rounded-sm border border-blue-100/50">
+           <strong {...props} className="inline-block px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold border border-indigo-100 shadow-sm mx-0.5">
              {children}
            </strong>
          );
