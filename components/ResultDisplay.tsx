@@ -18,26 +18,31 @@ interface ABCDEItem {
 }
 
 // Educational context for ABCDE
-const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string }> = {
+const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknown: string }> = {
   'Asymmetry': {
     benign: "Normal moles are typically symmetrical, meaning one half matches the other.",
-    suspicious: "Melanomas are often asymmetrical; the two halves do not match in shape."
+    suspicious: "Melanomas are often asymmetrical; the two halves do not match in shape.",
+    unknown: "Could not be determined. Please ensure the photo is taken directly from above, not at an angle."
   },
   'Border': {
     benign: "Benign moles usually have smooth, even, and well-defined borders.",
-    suspicious: "Early melanomas often have uneven, ragged, notched, or blurred edges."
+    suspicious: "Early melanomas often have uneven, ragged, notched, or blurred edges.",
+    unknown: "Edges unclear. Poor focus, low contrast, or hair obstructing the view can make borders hard to evaluate."
   },
   'Color': {
     benign: "Most benign moles are a single shade of brown or tan.",
-    suspicious: "A variety of colors (brown, tan, black, red, white, blue) is a warning sign."
+    suspicious: "A variety of colors (brown, tan, black, red, white, blue) is a warning sign.",
+    unknown: "Lighting conditions (shadows, glare, flash) may be distorting the true color. Try natural, even lighting."
   },
   'Diameter': {
     benign: "Benign moles are usually smaller than the eraser on a pencil (< 6mm).",
-    suspicious: "Melanomas are often larger than 6mm, though they can be smaller when first detected."
+    suspicious: "Melanomas are often larger than 6mm, though they can be smaller when first detected.",
+    unknown: "No scale reference available. It's hard to judge size from a photo without a reference object (like a coin)."
   },
   'Evolving': {
     benign: "Benign moles typically look the same over time.",
-    suspicious: "Any change in size, shape, color, elevation, or new symptoms like bleeding or itching is a danger sign."
+    suspicious: "Any change in size, shape, color, elevation, or new symptoms like bleeding or itching is a danger sign.",
+    unknown: "Cannot be determined from a single photo. Evolution requires monitoring changes over time or comparison with past photos."
   }
 };
 
@@ -624,8 +629,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                   titleColor = 'text-green-800';
                 }
 
-                // Get static educational context
-                const contextText = ABCDE_CONTEXT[item.title]?.[isSuspicious ? 'suspicious' : 'benign'];
+                // Get static educational context, with handling for Unknown
+                const contextKey = isSuspicious ? 'suspicious' : (isBenign ? 'benign' : 'unknown');
+                const contextText = ABCDE_CONTEXT[item.title]?.[contextKey];
 
                 return (
                   <div key={item.letter} className={`p-3 rounded-lg border ${cardBg} transition-all`}>
@@ -647,8 +653,8 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                        
                        {/* Educational Context Tip */}
                        {contextText && (
-                         <div className={`text-xs p-2 rounded border ${isSuspicious ? 'bg-white/60 border-red-100 text-red-600' : 'bg-white/60 border-green-100 text-green-700'}`}>
-                            <span className="font-bold block mb-0.5">{isSuspicious ? 'Risk Factor:' : 'Typical Norm:'}</span>
+                         <div className={`text-xs p-2 rounded border ${isSuspicious ? 'bg-white/60 border-red-100 text-red-600' : isBenign ? 'bg-white/60 border-green-100 text-green-700' : 'bg-white/60 border-slate-200 text-slate-600'}`}>
+                            <span className="font-bold block mb-0.5">{isSuspicious ? 'Risk Factor:' : isBenign ? 'Typical Norm:' : 'Why Unknown?'}</span>
                             {contextText}
                          </div>
                        )}
