@@ -615,13 +615,17 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
             </div>
           </div>
           
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
               <button 
                  onClick={handleGeneratePDF}
-                 className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}
-                 title="Download PDF Report"
+                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm ${
+                    isGeneralSuspicious 
+                        ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' 
+                        : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'
+                 }`}
               >
-                 <FileText className="w-5 h-5" />
+                 <FileText className="w-4 h-4" />
+                 <span className="whitespace-nowrap">Generate PDF Report</span>
               </button>
 
               <button 
