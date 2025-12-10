@@ -259,6 +259,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
   const handleGeneratePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     const contentWidth = pageWidth - (margin * 2);
     let yPos = 20;
@@ -449,6 +450,22 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
         doc.text(line, margin, yPos);
         yPos += 5;
     });
+
+    // Add Footer to all pages
+    const pageCount = doc.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128); // Grey
+        
+        const footerText = "DermaCheck AI Preliminary Report";
+        doc.text(footerText, margin, pageHeight - 10);
+        
+        const pageNumText = `Page ${i} of ${pageCount}`;
+        const pageNumWidth = doc.getTextWidth(pageNumText);
+        doc.text(pageNumText, pageWidth - margin - pageNumWidth, pageHeight - 10);
+    }
 
     doc.save("DermaCheck_Report.pdf");
   };
