@@ -4,10 +4,11 @@ import { ImageUploader } from './components/ImageUploader';
 import { ResultDisplay } from './components/ResultDisplay';
 import { analyzeImage } from './services/geminiService';
 import { AnalysisState, HistoryItem } from './types';
-import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut } from 'lucide-react';
+import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut, Settings } from 'lucide-react';
 import LZString from 'lz-string';
 
 const HISTORY_STORAGE_KEY = 'dermacheck_history_v1';
+const HISTORY_LIMIT_KEY = 'dermacheck_history_limit_v1';
 
 const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<{base64: string, mimeType: string} | null>(null);
@@ -17,17 +18,31 @@ const App: React.FC = () => {
     error: null,
   });
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyLimit, setHistoryLimit] = useState(10);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [showAbcdeInfo, setShowAbcdeInfo] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Load history on mount and check for shared URL
   useEffect(() => {
+    // Load History Limit first
+    let currentLimit = 10;
+    const storedLimit = localStorage.getItem(HISTORY_LIMIT_KEY);
+    if (storedLimit) {
+        currentLimit = parseInt(storedLimit, 10);
+        setHistoryLimit(currentLimit);
+    }
+
     // Load History
     try {
       const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
       if (stored) {
-        setHistory(JSON.parse(stored));
+        let historyData = JSON.parse(stored);
+        // Enforce limit on load if necessary
+        if (historyData.length > currentLimit) {
+            historyData = historyData.slice(0, currentLimit);
+        }
+        setHistory(historyData);
       }
     } catch (e) {
       console.error("Failed to load history", e);
@@ -91,7 +106,8 @@ const App: React.FC = () => {
       result
     };
 
-    const updatedHistory = [newItem, ...history].slice(0, 10); // Keep last 10
+    // Use the configured limit
+    const updatedHistory = [newItem, ...history].slice(0, historyLimit); 
     setHistory(updatedHistory);
     
     try {
@@ -106,6 +122,20 @@ const App: React.FC = () => {
             console.error("Could not save even one item", retryErr);
          }
       }
+    }
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setHistoryLimit(newLimit);
+    localStorage.setItem(HISTORY_LIMIT_KEY, newLimit.toString());
+    
+    // Trim existing history if it exceeds new limit
+    if (history.length > newLimit) {
+        const trimmed = history.slice(0, newLimit);
+        setHistory(trimmed);
+        try {
+           localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(trimmed));
+        } catch(e) { console.error(e); }
     }
   };
 
@@ -409,9 +439,28 @@ const App: React.FC = () => {
         {/* History Section */}
         {history.length > 0 && (
           <div id="history-section" className="mt-12">
-            <div className="flex items-center gap-2 mb-6">
-               <History className="text-slate-400 w-5 h-5" />
-               <h2 className="text-xl font-bold text-slate-800">Recent Scans</h2>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                    <History className="text-slate-400 w-5 h-5" />
+                    <h2 className="text-xl font-bold text-slate-800">Recent Scans</h2>
+                </div>
+                
+                {/* Settings Control */}
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                     <Settings className="w-4 h-4 text-slate-400" />
+                     <label htmlFor="history-limit" className="text-xs font-medium text-slate-500 hidden sm:inline">Keep last:</label>
+                     <select 
+                        id="history-limit"
+                        value={historyLimit}
+                        onChange={(e) => handleLimitChange(Number(e.target.value))}
+                        className="text-xs font-bold text-slate-700 bg-transparent border-none focus:ring-0 cursor-pointer outline-none"
+                     >
+                        <option value={5}>5 items</option>
+                        <option value={10}>10 items</option>
+                        <option value={15}>15 items</option>
+                        <option value={20}>20 items</option>
+                     </select>
+                </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
