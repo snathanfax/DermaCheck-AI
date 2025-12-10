@@ -30,7 +30,7 @@ E: [Benign/Suspicious/Unknown] - [One sentence summary]
 Rules for Data Block:
 - **Confidence Score**: Estimate how confident you are that your assessment (Benign vs Suspicious) is correct based on visual clarity and typical features. 0% is guessing, 100% is certain.
 - Use exactly "Benign", "Suspicious", or "Unknown".
-- Keep the summary short (under 15 words).
+- **Summary**: Keep the summary concise but descriptive (15-30 words). Mention specific visual cues observed (e.g., "Irregular jagged edges visible on the left side").
 - The letters A, B, C, D, E correspond to Asymmetry, Border, Color, Diameter, Evolving.
 
 Rules for Detailed Report:

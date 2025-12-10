@@ -17,6 +17,30 @@ interface ABCDEItem {
   summary: string;
 }
 
+// Educational context for ABCDE
+const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string }> = {
+  'Asymmetry': {
+    benign: "Normal moles are typically symmetrical, meaning one half matches the other.",
+    suspicious: "Melanomas are often asymmetrical; the two halves do not match in shape."
+  },
+  'Border': {
+    benign: "Benign moles usually have smooth, even, and well-defined borders.",
+    suspicious: "Early melanomas often have uneven, ragged, notched, or blurred edges."
+  },
+  'Color': {
+    benign: "Most benign moles are a single shade of brown or tan.",
+    suspicious: "A variety of colors (brown, tan, black, red, white, blue) is a warning sign."
+  },
+  'Diameter': {
+    benign: "Benign moles are usually smaller than the eraser on a pencil (< 6mm).",
+    suspicious: "Melanomas are often larger than 6mm, though they can be smaller when first detected."
+  },
+  'Evolving': {
+    benign: "Benign moles typically look the same over time.",
+    suspicious: "Any change in size, shape, color, elevation, or new symptoms like bleeding or itching is a danger sign."
+  }
+};
+
 // Helper to process text and insert search links for medical terms
 const processMedicalTerms = (text: string): React.ReactNode[] | string => {
   // Medical terms to highlight (sorted by length to match specific phrases first)
@@ -600,6 +624,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                   titleColor = 'text-green-800';
                 }
 
+                // Get static educational context
+                const contextText = ABCDE_CONTEXT[item.title]?.[isSuspicious ? 'suspicious' : 'benign'];
+
                 return (
                   <div key={item.letter} className={`p-3 rounded-lg border ${cardBg} transition-all`}>
                     <div className="flex items-center justify-between mb-2">
@@ -611,8 +638,20 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                       </div>
                       {icon}
                     </div>
-                    <div className={`text-xs ${isSuspicious ? 'font-medium text-red-700' : 'text-slate-600'}`}>
-                      {item.summary}
+                    
+                    <div className="space-y-3">
+                       {/* AI specific finding */}
+                       <div className={`text-sm ${isSuspicious ? 'font-medium text-red-700' : 'text-slate-600'}`}>
+                         {item.summary}
+                       </div>
+                       
+                       {/* Educational Context Tip */}
+                       {contextText && (
+                         <div className={`text-xs p-2 rounded border ${isSuspicious ? 'bg-white/60 border-red-100 text-red-600' : 'bg-white/60 border-green-100 text-green-700'}`}>
+                            <span className="font-bold block mb-0.5">{isSuspicious ? 'Risk Factor:' : 'Typical Norm:'}</span>
+                            {contextText}
+                         </div>
+                       )}
                     </div>
                   </div>
                 );
