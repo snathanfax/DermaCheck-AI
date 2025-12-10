@@ -46,18 +46,38 @@ const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknow
   }
 };
 
+// Medical definitions map
+const MEDICAL_DEFINITIONS: Record<string, string> = {
+  "Basal Cell Carcinoma": "A common skin cancer arising in basal cells, often caused by sun exposure.",
+  "Squamous Cell Carcinoma": "Skin cancer developing in squamous cells, often appearing as a scaly patch.",
+  "Melanoma": "The most serious type of skin cancer, developing in melanocytes (pigment cells).",
+  "Dysplastic Nevus": "An atypical mole that may resemble melanoma but is usually benign.",
+  "Actinic Keratosis": "A rough, scaly patch on skin from years of sun exposure; can be precancerous.",
+  "Seborrheic Keratosis": "A common, noncancerous waxy skin growth, often brown or black.",
+  "Merkel Cell Carcinoma": "A rare, aggressive skin cancer usually appearing as a flesh-colored or bluish nodule.",
+  "Spitz Nevus": "A benign, pink or brown dome-shaped mole that can mimic melanoma.",
+  "Dermatofibroma": "A common, benign fibrous skin nodule.",
+  "Malignant": "Cancerous; capable of invading nearby tissues and spreading.",
+  "Metastasis": "The spread of cancer cells to new areas of the body.",
+  "Carcinoma": "Cancer starting in skin or tissue lining organs.",
+  "Sarcoma": "Cancer starting in bone or soft tissues.",
+  "Hutchinson's Sign": "Pigment extending into the nail fold, suggestive of subungual melanoma.",
+  "Breslow Depth": "Measurement of melanoma thickness from the skin surface.",
+  "Clark Level": "Describes how deep melanoma has grown into skin layers.",
+  "Ulceration": "Open sore or break in the skin over the lesion.",
+  "Lymph Node": "Small organ filtering immune substances; often checked for cancer spread.",
+  "BCC": "Abbreviation for Basal Cell Carcinoma.",
+  "SCC": "Abbreviation for Squamous Cell Carcinoma.",
+  "LMM": "Lentigo Maligna Melanoma.",
+  "SSM": "Superficial Spreading Melanoma.",
+  "ALM": "Acral Lentiginous Melanoma."
+};
+
 // Helper to process text and insert search links for medical terms
 const processMedicalTerms = (text: string): React.ReactNode[] | string => {
-  // Medical terms to highlight (sorted by length to match specific phrases first)
-  const terms = [
-      "Basal Cell Carcinoma", "Squamous Cell Carcinoma", "Melanoma", 
-      "Dysplastic Nevus", "Actinic Keratosis", "Seborrheic Keratosis",
-      "Merkel Cell Carcinoma", "Spitz Nevus", "Dermatofibroma",
-      "Malignant", "Metastasis", "Carcinoma", "Sarcoma", "Hutchinson's Sign",
-      "Breslow Depth", "Clark Level", "Ulceration", "Lymph Node",
-      // Abbreviations
-      "BCC", "SCC", "LMM", "SSM", "ALM"
-  ].sort((a, b) => b.length - a.length);
+  // Sort terms by length (descending) to ensure specific phrases match before general ones
+  // e.g., "Basal Cell Carcinoma" matches before "Carcinoma"
+  const terms = Object.keys(MEDICAL_DEFINITIONS).sort((a, b) => b.length - a.length);
 
   const pattern = new RegExp(`\\b(${terms.join('|')})\\b`, 'gi');
   const parts = text.split(pattern);
@@ -65,21 +85,32 @@ const processMedicalTerms = (text: string): React.ReactNode[] | string => {
   if (parts.length === 1) return text;
 
   return parts.map((part, i) => {
-      if (terms.some(t => t.toLowerCase() === part.toLowerCase())) {
+      // Find the term in our dictionary (case-insensitive lookup)
+      const matchedKey = terms.find(t => t.toLowerCase() === part.toLowerCase());
+      
+      if (matchedKey) {
+          const definition = MEDICAL_DEFINITIONS[matchedKey];
           return (
               <span 
                   key={i} 
-                  className="inline-flex items-baseline gap-0.5 group relative cursor-pointer mx-0.5" 
+                  className="inline-block relative group mx-0.5 cursor-help"
                   onClick={(e) => {
                       e.stopPropagation();
                       window.open(`https://www.google.com/search?q=${encodeURIComponent(part + " skin condition")}`, '_blank');
                   }}
-                  title={`Click to search Google for "${part}"`}
               >
-                  <span className="font-medium text-indigo-700 border-b border-indigo-200 border-dashed hover:border-indigo-500 transition-colors">
-                      {part}
+                  <span className="inline-flex items-baseline gap-0.5 border-b border-indigo-300 border-dashed hover:border-indigo-600 transition-colors">
+                    <span className="font-medium text-indigo-700">{part}</span>
+                    <Search className="w-3 h-3 text-indigo-400 opacity-60 group-hover:opacity-100 transition-opacity translate-y-[1px]" />
                   </span>
-                  <Search className="w-3 h-3 text-indigo-400 opacity-60 group-hover:opacity-100 transition-opacity translate-y-[1px]" />
+                  
+                  {/* Tooltip */}
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-slate-800 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center leading-relaxed">
+                     <span className="font-bold block mb-0.5 text-blue-200">{matchedKey}</span>
+                     {definition}
+                     {/* Triangle pointer */}
+                     <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-800"></span>
+                  </span>
               </span>
           );
       }
