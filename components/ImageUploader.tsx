@@ -642,7 +642,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                    <button
                     onClick={toggleTorch}
                     className={`p-2 rounded-full transition-colors backdrop-blur-md ${torch ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-black/40 text-white hover:bg-black/60'}`}
-                    title="Toggle Flash"
+                    title={torch ? "Turn Flash Off" : "Turn Flash On"}
                    >
                        {torch ? <Zap className="w-5 h-5 fill-black" /> : <ZapOff className="w-5 h-5" />}
                    </button>
