@@ -332,28 +332,31 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
       }
       setIsEnhanced(false);
     } else {
-      const img = new Image();
-      img.src = originalImage;
-      await new Promise(r => img.onload = r);
+      try {
+        const img = await createImage(originalImage);
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+        // Apply filters for mole optimization (contrast + brightness + saturation)
+        // Slightly tuned for better visibility of skin textures
+        ctx.filter = 'contrast(1.2) brightness(1.1) saturate(1.1)';
+        ctx.drawImage(img, 0, 0);
 
-      // Apply filters for mole optimization (contrast + brightness + saturation)
-      ctx.filter = 'contrast(1.2) brightness(1.05) saturate(1.1)';
-      ctx.drawImage(img, 0, 0);
-
-      const enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      setPreview(enhancedDataUrl);
-      
-      const match = enhancedDataUrl.match(/^data:(.+);base64,(.+)$/);
-      if (match) {
-        onImageSelect(match[2], match[1]);
+        const enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        setPreview(enhancedDataUrl);
+        
+        const match = enhancedDataUrl.match(/^data:(.+);base64,(.+)$/);
+        if (match) {
+          onImageSelect(match[2], match[1]);
+        }
+        setIsEnhanced(true);
+      } catch (e) {
+        console.error("Failed to enhance image:", e);
       }
-      setIsEnhanced(true);
     }
   }, [originalImage, isEnhanced, onImageSelect]);
 
