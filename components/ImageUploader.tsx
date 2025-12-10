@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Settings, Monitor } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Settings, Monitor, RefreshCw } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
@@ -85,6 +85,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   const [isCropping, setIsCropping] = useState(false);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [cropZoom, setCropZoom] = useState(1);
+  const [aspect, setAspect] = useState<number | undefined>(undefined);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   // Clean up camera stream when component unmounts
@@ -400,22 +401,53 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 image={preview}
                 crop={crop}
                 zoom={cropZoom}
-                aspect={undefined} // Free crop
+                aspect={aspect}
                 onCropChange={setCrop}
                 onCropComplete={onCropComplete}
                 onZoomChange={setCropZoom}
                 objectFit="contain"
               />
+              
+              {/* Aspect Ratio Controls */}
+              <div className="absolute bottom-16 left-0 right-0 z-50 flex items-center justify-center gap-2 pointer-events-none">
+                 <div className="flex bg-black/60 backdrop-blur-md rounded-full p-1 border border-white/10 pointer-events-auto">
+                    <button
+                        onClick={() => setAspect(undefined)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === undefined ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
+                    >
+                        Free
+                    </button>
+                    <button
+                        onClick={() => setAspect(1)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 1 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
+                    >
+                        1:1
+                    </button>
+                    <button
+                        onClick={() => setAspect(4/3)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 4/3 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
+                    >
+                        4:3
+                    </button>
+                    <button
+                        onClick={() => setAspect(16/9)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 16/9 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}
+                    >
+                        16:9
+                    </button>
+                 </div>
+              </div>
+
               <div className="absolute bottom-4 left-0 right-0 z-50 flex items-center justify-center gap-4">
                  <button
                    onClick={() => setIsCropping(false)}
-                   className="flex items-center gap-2 px-4 py-2 bg-red-600/90 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors backdrop-blur-sm"
+                   className="flex items-center gap-2 px-4 py-2 bg-red-600/90 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors backdrop-blur-sm text-sm font-medium"
                  >
                    <X className="w-4 h-4" /> Cancel
                  </button>
                  <button
                    onClick={performCrop}
-                   className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm"
+                   className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm text-sm font-medium"
                  >
                    <Check className="w-4 h-4" /> Apply Crop
                  </button>
@@ -500,11 +532,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                           setIsCropping(true);
                           setCrop({ x: 0, y: 0 });
                           setCropZoom(1);
+                          setAspect(undefined); // Reset to free crop
                         }}
-                        className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105"
+                        className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105 group relative"
                         title="Crop Image"
                     >
                         <Scissors className="w-5 h-5" />
+                        <span className="absolute left-full ml-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            Crop Tool
+                        </span>
                     </button>
                 </div>
 
