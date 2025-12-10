@@ -20,28 +20,28 @@ interface ABCDEItem {
 // Educational context for ABCDE
 const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknown: string }> = {
   'Asymmetry': {
-    benign: "Normal moles are typically symmetrical, meaning one half matches the other.",
-    suspicious: "Melanomas are often asymmetrical; the two halves do not match in shape.",
+    benign: "Symmetry is a reassuring sign. Benign moles generally grow evenly in all directions, meaning if you folded it in half, the two sides would likely match.",
+    suspicious: "Asymmetry is a key warning sign. Unlike normal moles, melanoma often grows unevenly. Look for one half of the lesion having a different shape or size than the other.",
     unknown: "Could not be determined. Please ensure the photo is taken directly from above, not at an angle."
   },
   'Border': {
-    benign: "Benign moles usually have smooth, even, and well-defined borders.",
-    suspicious: "Early melanomas often have uneven, ragged, notched, or blurred edges.",
+    benign: "Benign moles typically have a smooth, well-defined border that clearly separates the mole from the surrounding skin.",
+    suspicious: "Irregular borders are a hallmark of malignancy. Cancerous cells often spread unevenly, creating edges that look ragged, notched, blurred, or poorly defined.",
     unknown: "Edges unclear. Poor focus, low contrast, or hair obstructing the view can make borders hard to evaluate."
   },
   'Color': {
-    benign: "Most benign moles are a single shade of brown or tan.",
-    suspicious: "A variety of colors (brown, tan, black, red, white, blue) is a warning sign.",
+    benign: "Uniformity is good. Harmless moles are usually a single, solid shade of brown or tan throughout the entire lesion.",
+    suspicious: "Color variation is a major red flag. Melanomas often display a chaotic mix of colors, including different shades of tan, brown, black, or even red, white, or blue.",
     unknown: "Lighting conditions (shadows, glare, flash) may be distorting the true color. Try natural, even lighting."
   },
   'Diameter': {
-    benign: "Benign moles are usually smaller than the eraser on a pencil (< 6mm).",
-    suspicious: "Melanomas are often larger than 6mm, though they can be smaller when first detected.",
+    benign: "Most benign moles are smaller than 6mm (about the size of a pencil eraser) and tend to stay a stable size over time.",
+    suspicious: "Lesions larger than a pencil eraser (6mm) are concerning, though melanomas can be smaller when they start. Rapid growth is a more specific danger sign than size alone.",
     unknown: "No scale reference available. It's hard to judge size from a photo without a reference object (like a coin)."
   },
   'Evolving': {
-    benign: "Benign moles typically look the same over time.",
-    suspicious: "Any change in size, shape, color, elevation, or new symptoms like bleeding or itching is a danger sign.",
+    benign: "Stability is key. Benign moles typically look the same over months and years. A lack of change is a strong indicator of a harmless lesion.",
+    suspicious: "Evolution is the most critical factor. Any mole that is changing in size, shape, color, elevation, or starts bleeding, itching, or crusting requires immediate medical attention.",
     unknown: "Cannot be determined from a single photo. Evolution requires monitoring changes over time or comparison with past photos."
   }
 };
