@@ -43,10 +43,10 @@ Rules for Detailed Report:
 - **Tone**: Professional, empathetic, and objective.
 `;
 
-export const analyzeImage = async (base64Image: string, mimeType: string): Promise<AnalysisResult> => {
+export const analyzeImage = async (base64Image: string, mimeType: string, modelName: string = "gemini-2.5-flash"): Promise<AnalysisResult> => {
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: modelName,
       contents: {
         parts: [
           {

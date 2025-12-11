@@ -4,11 +4,12 @@ import { ImageUploader } from './components/ImageUploader';
 import { ResultDisplay } from './components/ResultDisplay';
 import { analyzeImage } from './services/geminiService';
 import { AnalysisState, HistoryItem } from './types';
-import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut, Settings } from 'lucide-react';
+import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut, Settings, X, Cpu, Save } from 'lucide-react';
 import LZString from 'lz-string';
 
 const HISTORY_STORAGE_KEY = 'dermacheck_history_v1';
 const HISTORY_LIMIT_KEY = 'dermacheck_history_limit_v1';
+const MODEL_STORAGE_KEY = 'dermacheck_model_v1';
 
 const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<{base64: string, mimeType: string} | null>(null);
@@ -19,19 +20,26 @@ const App: React.FC = () => {
   });
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [historyLimit, setHistoryLimit] = useState(10);
+  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [showAbcdeInfo, setShowAbcdeInfo] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [uploaderKey, setUploaderKey] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
 
   // Load history on mount and check for shared URL
   useEffect(() => {
-    // Load History Limit first
-    let currentLimit = 10;
+    // Load Settings (Limit & Model)
     const storedLimit = localStorage.getItem(HISTORY_LIMIT_KEY);
+    let currentLimit = 10;
     if (storedLimit) {
         currentLimit = parseInt(storedLimit, 10);
         setHistoryLimit(currentLimit);
+    }
+
+    const storedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    if (storedModel) {
+        setSelectedModel(storedModel);
     }
 
     // Load History
@@ -140,6 +148,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleModelChange = (newModel: string) => {
+    setSelectedModel(newModel);
+    localStorage.setItem(MODEL_STORAGE_KEY, newModel);
+  };
+
   const deleteHistoryItem = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     const updated = history.filter(item => item.id !== id);
@@ -193,7 +206,7 @@ const App: React.FC = () => {
     setAnalysis({ status: 'analyzing', result: null, error: null });
 
     try {
-      const result = await analyzeImage(selectedImage.base64, selectedImage.mimeType);
+      const result = await analyzeImage(selectedImage.base64, selectedImage.mimeType, selectedModel);
       setAnalysis({ status: 'success', result, error: null });
       saveToHistory(selectedImage, result);
     } catch (err: any) {
@@ -249,6 +262,87 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
+      
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-[#DC143C] relative z-10 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+               <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                 <Settings className="w-5 h-5 text-blue-600" /> Application Settings
+               </h3>
+               <button onClick={() => setShowSettings(false)} className="p-1 hover:bg-slate-200 rounded-full transition-colors text-slate-500">
+                  <X className="w-5 h-5" />
+               </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+               {/* Model Selection */}
+               <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Cpu className="w-4 h-4 text-slate-500" /> AI Analysis Model
+                  </label>
+                  <div className="space-y-2">
+                     {[
+                       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Standard Speed & Accuracy (Recommended)' },
+                       { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro', desc: 'Advanced Reasoning & Complex Tasks' },
+                       { id: 'gemini-2.5-flash-lite-latest', name: 'Gemini Flash Lite', desc: 'Fastest Response Time' }
+                     ].map((model) => (
+                        <button
+                           key={model.id}
+                           onClick={() => handleModelChange(model.id)}
+                           className={`w-full text-left p-3 rounded-xl border transition-all ${
+                              selectedModel === model.id 
+                                ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' 
+                                : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-slate-50'
+                           }`}
+                        >
+                           <div className="flex justify-between items-center">
+                              <span className={`font-semibold ${selectedModel === model.id ? 'text-blue-700' : 'text-slate-700'}`}>{model.name}</span>
+                              {selectedModel === model.id && <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>}
+                           </div>
+                           <p className="text-xs text-slate-500 mt-1">{model.desc}</p>
+                        </button>
+                     ))}
+                  </div>
+               </div>
+
+               {/* History Limit */}
+               <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <History className="w-4 h-4 text-slate-500" /> History Storage Limit
+                  </label>
+                  <div className="flex items-center gap-4">
+                     <select 
+                        value={historyLimit}
+                        onChange={(e) => handleLimitChange(Number(e.target.value))}
+                        className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                     >
+                        <option value={5}>Keep last 5 items</option>
+                        <option value={10}>Keep last 10 items</option>
+                        <option value={15}>Keep last 15 items</option>
+                        <option value={20}>Keep last 20 items</option>
+                     </select>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Older scans will be automatically removed when the limit is reached.
+                  </p>
+               </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+               <button 
+                  onClick={() => setShowSettings(false)}
+                  className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-sm"
+               >
+                  <Save className="w-4 h-4" /> Done
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation Bar */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -261,7 +355,14 @@ const App: React.FC = () => {
                 DermaCheck AI
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+               <button
+                  onClick={() => setShowSettings(true)}
+                  className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="Settings"
+               >
+                  <Settings className="w-5 h-5" />
+               </button>
                {history.length > 0 && (
                   <button 
                     onClick={() => {
@@ -273,8 +374,8 @@ const App: React.FC = () => {
                     <History className="w-4 h-4" /> History
                   </button>
                )}
-              <div className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
-                Beta
+              <div className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                {selectedModel === 'gemini-2.5-flash' ? 'Flash' : selectedModel.includes('pro') ? 'Pro' : 'Lite'}
               </div>
             </div>
           </div>
@@ -453,23 +554,6 @@ const App: React.FC = () => {
                 <div className="flex items-center gap-2">
                     <History className="text-slate-400 w-5 h-5" />
                     <h2 className="text-xl font-bold text-slate-800">Recent Scans</h2>
-                </div>
-                
-                {/* Settings Control */}
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
-                     <Settings className="w-4 h-4 text-slate-400" />
-                     <label htmlFor="history-limit" className="text-xs font-medium text-slate-500 hidden sm:inline">Keep last:</label>
-                     <select 
-                        id="history-limit"
-                        value={historyLimit}
-                        onChange={(e) => handleLimitChange(Number(e.target.value))}
-                        className="text-xs font-bold text-slate-700 bg-transparent border-none focus:ring-0 cursor-pointer outline-none"
-                     >
-                        <option value={5}>5 items</option>
-                        <option value={10}>10 items</option>
-                        <option value={15}>15 items</option>
-                        <option value={20}>20 items</option>
-                     </select>
                 </div>
             </div>
             
