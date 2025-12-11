@@ -468,7 +468,7 @@ const App: React.FC = () => {
                 <div 
                   key={item.id}
                   onClick={() => loadFromHistory(item)}
-                  className="bg-white p-4 rounded-xl border border-[#DC143C] shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group flex items-start gap-4"
+                  className="bg-white p-4 rounded-lg border border-[#DC143C] shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group flex items-start gap-4"
                 >
                   {/* Thumbnail */}
                   <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-100">
