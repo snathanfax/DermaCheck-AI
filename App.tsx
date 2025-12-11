@@ -150,7 +150,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-12">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -247,7 +247,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-3xl mx-auto px-4 py-8 flex-grow w-full">
         <Disclaimer />
 
         <div className="mb-8">
@@ -435,6 +435,17 @@ const App: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <footer className="bg-white border-t border-slate-200 py-8 mt-auto">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <p className="text-slate-700 font-medium text-sm mb-2">
+            Developed by Shaji R. Nathan &lt;<a href="mailto:snathanfax@gmail.com" className="text-indigo-600 hover:text-indigo-800 transition-colors">snathanfax@gmail.com</a>&gt;, <a href="https://www.shaji.net" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800 transition-colors">www.shaji.net</a>
+          </p>
+          <p className="text-xs text-slate-400">
+            Copyright © 2025 DermaCheck AI. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
