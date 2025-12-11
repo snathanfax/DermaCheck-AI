@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2, AlertCircle, PlayCircle, PauseCircle } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2, AlertCircle, PlayCircle, PauseCircle, Volume2, VolumeX } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
@@ -101,6 +101,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   // Audio Playback State
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  
   const audioRef = useRef<HTMLAudioElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -600,6 +605,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     }
   };
 
+  // Audio Control Handlers
   const togglePlayback = () => {
       if (!audioRef.current || !audioUrl) return;
       if (isPlaying) {
@@ -609,6 +615,58 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           audioRef.current.play();
           setIsPlaying(true);
       }
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (audioRef.current) {
+      setDuration(audioRef.current.duration);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+    if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const time = parseFloat(e.target.value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const vol = parseFloat(e.target.value);
+    setVolume(vol);
+    if (audioRef.current) {
+      audioRef.current.volume = vol;
+      setIsMuted(vol === 0);
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      const newMute = !isMuted;
+      setIsMuted(newMute);
+      audioRef.current.muted = newMute;
+    }
+  };
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return "0:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const handleNotesChangeLocal = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -624,6 +682,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           setAudioUrl(null);
       }
       setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
       if (isRecording) {
         stopRecording();
       }
@@ -666,11 +726,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
              </div>
         )}
 
-        {/* Audio Player Element */}
+        {/* Audio Player Element (Hidden, Logic Only) */}
         <audio 
             ref={audioRef} 
             src={audioUrl || undefined} 
-            onEnded={() => setIsPlaying(false)} 
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onEnded={handleAudioEnded}
             className="hidden" 
         />
 
@@ -693,18 +755,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
             <div className="absolute bottom-3 right-3 flex gap-2">
                 {notesValue && !isRecording && (
                     <>
-                        {audioUrl && (
-                             <button
-                                type="button"
-                                onClick={togglePlayback}
-                                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors shadow-sm border border-indigo-200 text-xs font-bold"
-                                title={isPlaying ? "Pause Recording" : "Review Recording"}
-                            >
-                                {isPlaying ? <PauseCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
-                                {isPlaying ? "Pause" : "Review"}
-                            </button>
-                        )}
-
                         <button
                             type="button"
                             onClick={handleClearNotes}
@@ -750,6 +800,49 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 )}
             </div>
         </div>
+
+        {/* Custom Audio Player UI */}
+        {audioUrl && !isRecording && (
+            <div className="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center gap-3 shadow-sm animate-in fade-in slide-in-from-top-1">
+                <button
+                    type="button"
+                    onClick={togglePlayback}
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                    {isPlaying ? <PauseCircle className="w-5 h-5" /> : <PlayCircle className="w-5 h-5" />}
+                </button>
+
+                <div className="flex-grow flex flex-col gap-1 min-w-0">
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-indigo-600 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-sm focus:outline-none"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 font-medium font-mono px-0.5">
+                        <span>{formatTime(currentTime)}</span>
+                        <span>{formatTime(duration)}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0 border-l border-slate-200 pl-3">
+                     <button type="button" onClick={toggleMute} className="text-slate-400 hover:text-slate-600 transition-colors">
+                        {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                     </button>
+                     <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={isMuted ? 0 : volume}
+                        onChange={handleVolumeChange}
+                        className="w-16 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-slate-500 [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:bg-slate-600 focus:outline-none"
+                     />
+                </div>
+            </div>
+        )}
         
         {notesValue && !isRecording && (
             <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1.5 font-medium px-1">
