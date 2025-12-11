@@ -624,11 +624,19 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
             
             {/* HAM10000 Prediction */}
             {hamPrediction !== "N/A" && (
-                <div className="bg-violet-50/50 p-3 rounded-xl border border-violet-100">
+                <div className="bg-violet-50/50 p-3 rounded-xl border border-violet-100 relative group">
                      <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
                             <BrainCircuit className="w-4 h-4 text-violet-600" />
                             <h3 className="font-semibold text-violet-900 text-xs">HAM10000 Neural Match</h3>
+                            {/* Tooltip Icon */}
+                            <div className="relative group/tooltip">
+                                <HelpCircle className="w-3 h-3 text-violet-400 cursor-help" />
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
+                                    The system infers classification by extracting high-dimensional feature vectors (texture, color, structure) and comparing them against statistical centroids of the 10,000 HAM10000 training images.
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                </div>
+                            </div>
                         </div>
                         {hamConfidence !== "N/A" && <span className="text-xs font-bold bg-violet-200 text-violet-800 px-2 py-0.5 rounded-full">{hamConfidence}</span>}
                     </div>
@@ -636,7 +644,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                         Matched: <span className="font-bold">{hamPrediction}</span>
                     </div>
                      <p className="text-[10px] text-violet-600 mt-1 leading-tight opacity-80">
-                         Based on multi-class feature vector baseline.
+                         Methodology: Feature vector comparison against HAM10000 dataset centroids.
                      </p>
                 </div>
             )}

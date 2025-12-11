@@ -50,7 +50,7 @@ Rules for Data Block:
 
 Rules for Detailed Report:
 - Use Markdown.
-- **Include a specific section titled "HAM10000 Methodology"**: In this section, provide a simple description of how the strong baseline for multi-class classification was used. Explain that the system infers the classification by extracting high-dimensional feature vectors (analyzing texture, color distribution, and structural irregularities) and comparing them against the statistical centroids of the 10,000 training images in the HAM10000 dataset to determine the highest probability match among the 7 diagnostic classes.
+- **Include a specific section titled "HAM10000 Methodology"**: In this section, provide a clear and technical description of how the strong baseline for multi-class classification was used. Explicitly explain that the system infers the classification by **extracting high-dimensional feature vectors** (analyzing texture, color distribution, and structural irregularities) from the uploaded image and **comparing them against the statistical centroids** of the 10,000 training images in the HAM10000 dataset to determine the highest probability match among the 7 diagnostic classes.
 - **Safety First**: Always err on the side of caution.
 `;
 
