@@ -4,7 +4,7 @@ import { ImageUploader } from './components/ImageUploader';
 import { ResultDisplay } from './components/ResultDisplay';
 import { analyzeImage } from './services/geminiService';
 import { AnalysisState, HistoryItem } from './types';
-import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut, Settings, X, Cpu, Save } from 'lucide-react';
+import { Activity, ScanLine, Info, Sparkles, History, Trash2, Calendar, ChevronRight, ChevronDown, Clock, Loader2, Volume2, StopCircle, RotateCcw, LogOut, Settings, X, Cpu, Save, HelpCircle, Shield, Brain, Database, AlertTriangle } from 'lucide-react';
 import LZString from 'lz-string';
 
 const HISTORY_STORAGE_KEY = 'dermacheck_history_v1';
@@ -26,6 +26,7 @@ const App: React.FC = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [uploaderKey, setUploaderKey] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   // Load history on mount and check for shared URL
   useEffect(() => {
@@ -343,6 +344,72 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* About Modal */}
+      {showAbout && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setShowAbout(false)}></div>
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-[#DC143C] relative z-10 overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 flex-shrink-0">
+               <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                 <Shield className="w-5 h-5 text-blue-600" /> About DermaCheck AI
+               </h3>
+               <button onClick={() => setShowAbout(false)} className="p-1 hover:bg-slate-200 rounded-full transition-colors text-slate-500">
+                  <X className="w-5 h-5" />
+               </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-6">
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-slate-800 flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-blue-500" /> Purpose
+                    </h4>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                        DermaCheck AI is designed to make skin health monitoring accessible to everyone. Our goal is to provide a preliminary, AI-assisted evaluation of skin moles and lesions to help users identify potential warning signs early. 
+                        Early detection is critical in treating skin conditions effectively.
+                    </p>
+                </div>
+
+                <div className="space-y-2">
+                    <h4 className="font-semibold text-slate-800 flex items-center gap-2">
+                        <Brain className="w-4 h-4 text-purple-500" /> Technology & Methodology
+                    </h4>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                        The application leverages Google's advanced **Gemini** generative AI models for image analysis. It evaluates skin lesions based on widely accepted medical guidelines:
+                    </p>
+                    <ul className="list-disc pl-5 text-sm text-slate-600 space-y-1">
+                        <li><strong>ABCDE Rule:</strong> Analyzing Asymmetry, Border irregularity, Color variation, Diameter, and Evolving characteristics.</li>
+                        <li><strong>HAM10000 Dataset:</strong> Comparing features against a dataset of 10,000 dermatoscopic images (Human Against Machine) to classify common diagnostic categories.</li>
+                        <li><strong>ISIC Archive:</strong> Referencing patterns from the International Skin Imaging Collaboration for risk assessment.</li>
+                    </ul>
+                </div>
+
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                    <h4 className="font-bold text-amber-800 flex items-center gap-2 mb-2">
+                        <AlertTriangle className="w-4 h-4" /> Limitations & Disclaimer
+                    </h4>
+                    <p className="text-xs text-amber-700 leading-relaxed">
+                        <strong>DermaCheck AI is NOT a diagnostic tool.</strong> It cannot replace a professional medical examination, biopsy, or diagnosis. The AI analysis is probabilistic and can make errors. <br/><br/>
+                        Always consult a certified dermatologist for any skin concerns, especially if you notice changes in a mole's size, shape, or color, or if you experience bleeding or itching.
+                    </p>
+                </div>
+                
+                <div className="text-center pt-2">
+                    <p className="text-xs text-slate-400">Developed by Shaji R. Nathan</p>
+                </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end flex-shrink-0">
+               <button 
+                  onClick={() => setShowAbout(false)}
+                  className="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-900 transition-colors shadow-sm"
+               >
+                  Close
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation Bar */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -356,6 +423,13 @@ const App: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-3">
+               <button
+                  onClick={() => setShowAbout(true)}
+                  className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="About"
+               >
+                  <HelpCircle className="w-5 h-5" />
+               </button>
                <button
                   onClick={() => setShowSettings(true)}
                   className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"

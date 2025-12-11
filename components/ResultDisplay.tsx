@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import { AnalysisResult } from '../types';
-import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity } from 'lucide-react';
+import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield } from 'lucide-react';
 import LZString from 'lz-string';
 import { jsPDF } from "jspdf";
 
@@ -715,29 +715,49 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
           </div>
         </div>
 
-        {groundingChunks && groundingChunks.length > 0 && (
-          <div className="bg-slate-50 px-6 py-4 border-t border-[#DC143C] mt-6 rounded-b-xl">
-            <div className="flex items-center gap-2 mb-3 text-slate-500">
-              <Search className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider">References & Grounding Sources</span>
+        <div className="bg-slate-50 px-6 py-4 border-t border-[#DC143C] mt-6 rounded-b-xl">
+            {/* Prevention & Resources Section */}
+            <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3 text-emerald-600">
+                    <Shield className="w-4 h-4" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Prevention & Education Resources</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                    <a href="https://www.skincancer.org/skin-cancer-prevention/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-emerald-400 hover:shadow-md transition-all text-sm group">
+                        <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
+                        <span className="font-medium text-slate-700 group-hover:text-emerald-700">Skin Cancer Foundation Guidelines</span>
+                    </a>
+                    <a href="https://www.aad.org/public/diseases/skin-cancer/prevent/how" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-emerald-400 hover:shadow-md transition-all text-sm group">
+                        <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
+                        <span className="font-medium text-slate-700 group-hover:text-emerald-700">AAD Spot Skin Cancer™</span>
+                    </a>
+                </div>
             </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {groundingChunks.map((chunk, idx) => {
-                if (!chunk.web?.uri) return null;
-                const hostname = getHostname(chunk.web.uri);
-                return (
-                  <a key={idx} href={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-blue-400 hover:shadow-md transition-all text-sm group">
-                    <div className="mt-0.5 bg-blue-50 p-1.5 rounded-full text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
-                    <div className="flex-1 min-w-0">
-                        <div className="font-medium text-slate-700 group-hover:text-blue-700 truncate block">{chunk.web.title || hostname}</div>
-                        <div className="text-xs text-slate-400 group-hover:text-slate-500 truncate">{hostname}</div>
-                    </div>
-                  </a>
-                );
-              })}
+
+            {groundingChunks && groundingChunks.length > 0 && (
+            <div>
+                <div className="flex items-center gap-2 mb-3 text-slate-500">
+                <Search className="w-4 h-4" />
+                <span className="text-xs font-semibold uppercase tracking-wider">References & Grounding Sources</span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                {groundingChunks.map((chunk, idx) => {
+                    if (!chunk.web?.uri) return null;
+                    const hostname = getHostname(chunk.web.uri);
+                    return (
+                    <a key={idx} href={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-blue-400 hover:shadow-md transition-all text-sm group">
+                        <div className="mt-0.5 bg-blue-50 p-1.5 rounded-full text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
+                        <div className="flex-1 min-w-0">
+                            <div className="font-medium text-slate-700 group-hover:text-blue-700 truncate block">{chunk.web.title || hostname}</div>
+                            <div className="text-xs text-slate-400 group-hover:text-slate-500 truncate">{hostname}</div>
+                        </div>
+                    </a>
+                    );
+                })}
+                </div>
             </div>
-          </div>
-        )}
+            )}
+        </div>
       </div>
     </div>
   );

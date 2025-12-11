@@ -536,7 +536,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 className="overflow-hidden w-full h-full relative flex items-center justify-center bg-black"
                 style={{ 
                     cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-                    minHeight: '300px'
+                    minHeight: '250px'
                 }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
@@ -546,7 +546,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 <img 
                 src={preview} 
                 alt="Upload preview" 
-                className="w-full h-auto object-contain max-h-[500px] transition-transform duration-100 ease-out will-change-transform"
+                className="w-full h-auto object-contain max-h-[300px] sm:max-h-[350px] transition-transform duration-100 ease-out will-change-transform"
                 style={{ 
                     transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`
                 }}
