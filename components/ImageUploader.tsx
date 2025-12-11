@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Settings, Monitor, RefreshCw, Mic, MicOff } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Settings, Monitor, RefreshCw, Mic, MicOff, Trash2 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
@@ -487,8 +487,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
       onNotesChange?.(e.target.value);
   };
 
+  const handleClearNotes = () => {
+      onNotesChange?.("");
+  };
+
   const renderNotesSection = () => (
-    <div className="mt-6 animate-in fade-in slide-in-from-bottom-4">
+    <div className="mt-4 animate-in fade-in slide-in-from-bottom-4">
         <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
             <Mic className="w-4 h-4 text-blue-600" />
             Patient Notes / Skin Concerns
@@ -498,19 +502,31 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 value={notesValue}
                 onChange={handleNotesChangeLocal}
                 placeholder="Describe symptoms (e.g., itching, bleeding, when it started) to help the analysis..."
-                className="w-full p-3 pr-12 text-sm border border-[#DC143C] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px] resize-y bg-white text-slate-700 shadow-sm"
+                className="w-full p-3 pr-24 text-sm border border-[#DC143C] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px] resize-y bg-white text-slate-700 shadow-sm"
             />
-            <button
-                onClick={toggleRecording}
-                className={`absolute right-2 bottom-2 p-2 rounded-full transition-all border ${
-                    isRecording 
-                    ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
-                    : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
-                }`}
-                title={isRecording ? "Stop Recording" : "Start Voice Recording"}
-            >
-                {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </button>
+            
+            <div className="absolute right-2 bottom-2 flex gap-1">
+                {notesValue && (
+                    <button
+                        onClick={handleClearNotes}
+                        className="p-2 rounded-full transition-all bg-slate-50 text-slate-400 border border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                        title="Clear Notes"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                )}
+                <button
+                    onClick={toggleRecording}
+                    className={`p-2 rounded-full transition-all border ${
+                        isRecording 
+                        ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+                    }`}
+                    title={isRecording ? "Stop Recording" : "Start Voice Recording"}
+                >
+                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+            </div>
         </div>
         {isRecording && (
              <span className="text-xs text-red-500 font-medium mt-1 flex items-center gap-1 animate-pulse">
@@ -569,7 +585,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
               <div 
                   className="overflow-hidden w-full h-full relative flex items-center justify-center bg-black"
-                  style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default', minHeight: '250px' }}
+                  style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default', minHeight: '200px' }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
@@ -578,7 +594,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                   <img 
                   src={preview} 
                   alt="Upload preview" 
-                  className="w-full h-auto object-contain max-h-[300px] sm:max-h-[350px] transition-transform duration-100 ease-out will-change-transform"
+                  className="w-full h-auto object-contain max-h-[250px] sm:max-h-[300px] transition-transform duration-100 ease-out will-change-transform"
                   style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})` }}
                   draggable={false}
                   />
