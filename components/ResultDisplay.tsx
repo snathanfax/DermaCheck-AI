@@ -741,7 +741,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                         <span className="text-xs font-bold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">{isicScore}/10</span>
                     </div>
                     <div className="w-full bg-indigo-200 rounded-full h-1.5 overflow-hidden">
-                        <div className={`h-full rounded-full transition-all duration-1000 ${parseInt(isicScore) <= 3 ? 'bg-green-500' : parseInt(isicScore) <= 6 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${(parseInt(isicScore) / 10) * 100}%` }}></div>
+                        <div className={`h-full rounded-full transition-all duration-1000 ${parseInt(isicScore) <= 3 ? 'bg-green-500' : parseInt(isicScore) <= 6 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${(Math.min(parseInt(isicScore) || 0, 10) / 10) * 100}%` }}></div>
                     </div>
                 </div>
             )}
@@ -817,7 +817,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
 
             {/* Overall Risk Stratification Card */}
             {riskLevel !== "N/A" && (
-                <div className="bg-fuchsia-50/50 p-3 rounded-xl border border-fuchsia-100 relative group sm:col-span-2 lg:col-span-1">
+                <div className="bg-fuchsia-50/50 p-3 rounded-xl border border-fuchsia-100 relative group sm:col-span-2 lg:col-span-1 shadow-sm">
                     <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
                             <Activity className="w-4 h-4 text-fuchsia-600" />

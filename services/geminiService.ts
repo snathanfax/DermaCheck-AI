@@ -41,10 +41,17 @@ E: [Benign/Suspicious/Unknown] - [One sentence summary]
 
 [Insert Detailed Markdown Report Here]
 
-Rules for Data Block:
+Scoring Rubrics:
+- **ISIC Risk Score (1-10)**: 
+    - 1-3: Clear benign pattern (e.g., typical nevus).
+    - 4-6: Indeterminate/Atypical features present.
+    - 7-10: Strong resemblance to malignant examples in ISIC archive.
 - **Glasgow Score**: Sum of Major (2pts) and Minor (1pts) criteria present.
-- **Risk Level**: High if Glasgow > 3 OR ISIC > 7. Medium if Glasgow = 2-3. Low otherwise.
-- **Dermatoscopic Features**: Comma-separated list of observed structures.
+- **Risk Level**: 
+    - High: Glasgow > 3 OR ISIC > 7.
+    - Medium: Glasgow = 2-3 OR ISIC = 4-6.
+    - Low: Glasgow < 2 AND ISIC < 4.
+- **HAM10000 Prediction**: Choose from [Melanocytic nevus, Melanoma, Benign keratosis, Basal cell carcinoma, Actinic keratosis, Vascular lesion, Dermatofibroma].
 - **Summary**: Concise description of visual cues.
 
 Rules for Detailed Report:
