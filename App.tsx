@@ -28,6 +28,9 @@ const App: React.FC = () => {
   // Voice Instruction State
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Key to force ImageUploader reset
+  const [uploaderKey, setUploaderKey] = useState(0);
+
   useEffect(() => {
     const savedModel = localStorage.getItem("derma_model");
     if (savedModel) {
@@ -53,7 +56,7 @@ const App: React.FC = () => {
       return;
     }
 
-    const text = "Welcome to Derma Check AI. Here is how to use this app: First, upload a clear, close-up photo of your mole, or take a new one using the camera button. Second, you can record a voice note describing any symptoms like itching, bleeding, or changes in size. Finally, click the Run AI Analysis button to receive a detailed assessment based on medical criteria.";
+    const text = "Welcome to Derma Check AI. Here is how to use this app: First, upload a clear, close-up photo of your mole, or take a new one using the camera button. Second, you can record a voice note describing any symptoms like itching, bleeding, or changes in size. You can also go to settings to choose a specific AI model for analysis. Finally, click the Run AI Analysis button to receive a detailed assessment based on medical criteria.";
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
@@ -109,6 +112,7 @@ const App: React.FC = () => {
     setResult(null);
     setError(null);
     setPatientNotes("");
+    setUploaderKey(prev => prev + 1);
     // We do NOT clear selectedMoleId here so users can rapidly scan the same mole if needed,
     // or they can change it manually in the selector.
   };
@@ -122,6 +126,7 @@ const App: React.FC = () => {
     setSelectedMoleId(undefined);
     setActiveMoleProfile(null);
     setShowTrends(false);
+    setUploaderKey(prev => prev + 1);
     
     // Stop any audio/speech
     if (isSpeaking) {
@@ -277,6 +282,7 @@ const App: React.FC = () => {
           )}
 
           <ImageUploader 
+            key={uploaderKey}
             onImageSelect={handleImageSelect}
             onClear={handleClear}
             isAnalyzing={isAnalyzing}

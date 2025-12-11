@@ -805,7 +805,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
 
         doc.setFont("helvetica", "bold");
         doc.setFontSize(6);
-        const devText = "Developed by Shaji R. Nathan  snathanfax@gmail.com";
+        const devText = "Developed by Shaji R. Nathan  snathanfax@gmail.com  |  www.shaji.net";
         doc.text(devText, (pageWidth - doc.getTextWidth(devText)) / 2, pageHeight - 10);
     }
 
