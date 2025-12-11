@@ -24,13 +24,28 @@ export enum ABCDE {
   E = "Evolving"
 }
 
+export interface MoleProfile {
+  id: string;
+  name: string;
+  location: string;
+  createdAt: number;
+}
+
 export interface HistoryItem {
   id: string;
   timestamp: number;
+  moleId?: string; // Link to a specific mole profile
   imageData: {
     base64: string;
     mimeType: string;
   };
   result: AnalysisResult;
   patientNotes?: string;
+  // Parsed metrics for easy graphing
+  metrics?: {
+    isicScore: number;
+    glasgowScore: number;
+    riskLevel: string;
+    confidence: number;
+  };
 }

@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ImageUploader } from './components/ImageUploader';
 import { ResultDisplay } from './components/ResultDisplay';
 import { Disclaimer } from './components/Disclaimer';
+import { MoleSelector } from './components/MoleSelector';
+import { TrendAnalysis } from './components/TrendAnalysis';
 import { analyzeImage } from './services/geminiService';
-import { AnalysisResult } from './types';
-import { ListChecks, Loader2, Stethoscope, Microscope, Activity, Settings, X, CheckCircle, RotateCcw } from 'lucide-react';
+import { storageService } from './services/storageService';
+import { AnalysisResult, MoleProfile } from './types';
+import { ListChecks, Loader2, Stethoscope, Microscope, Activity, Settings, X, CheckCircle, RotateCcw, TrendingUp } from 'lucide-react';
 
 const App: React.FC = () => {
   const [image, setImage] = useState<{ base64: string; mimeType: string } | null>(null);
@@ -16,6 +19,11 @@ const App: React.FC = () => {
   // Settings State
   const [showSettings, setShowSettings] = useState(false);
   const [selectedModel, setSelectedModel] = useState<string>("gemini-2.5-flash");
+
+  // Trend & Mole Tracking State
+  const [selectedMoleId, setSelectedMoleId] = useState<string | undefined>(undefined);
+  const [showTrends, setShowTrends] = useState(false);
+  const [activeMoleProfile, setActiveMoleProfile] = useState<MoleProfile | null>(null);
 
   useEffect(() => {
     const savedModel = localStorage.getItem("derma_model");
@@ -47,6 +55,11 @@ const App: React.FC = () => {
       // Pass patientNotes and selectedModel to the analysis service
       const analysis = await analyzeImage(image.base64, image.mimeType, selectedModel, patientNotes);
       setResult(analysis);
+      
+      // Auto-save to history if we have a valid result
+      // We pass the selectedMoleId (undefined if general scan)
+      storageService.saveAnalysis(selectedMoleId, image, analysis, patientNotes);
+      
     } catch (err: any) {
       setError(err.message || "Failed to analyze image");
     } finally {
@@ -59,6 +72,27 @@ const App: React.FC = () => {
     setResult(null);
     setError(null);
     setPatientNotes("");
+    // We do NOT clear selectedMoleId here so users can rapidly scan the same mole if needed,
+    // or they can change it manually in the selector.
+  };
+
+  const openTrends = () => {
+    // If a mole is selected, show its trends. If not, pick the first one or show empty
+    if (selectedMoleId) {
+       const moles = storageService.getMoles();
+       const profile = moles.find(m => m.id === selectedMoleId) || null;
+       setActiveMoleProfile(profile);
+       setShowTrends(true);
+    } else {
+       // Allow picking a mole from a list inside trends? For now, simple Alert or logic
+       const moles = storageService.getMoles();
+       if(moles.length > 0) {
+         setActiveMoleProfile(moles[0]);
+         setShowTrends(true);
+       } else {
+         alert("Create a mole profile first to track trends.");
+       }
+    }
   };
 
   return (
@@ -103,6 +137,15 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* Trend Analysis Modal */}
+      {showTrends && activeMoleProfile && (
+        <TrendAnalysis 
+          mole={activeMoleProfile}
+          history={storageService.getMoleHistory(activeMoleProfile.id)}
+          onClose={() => setShowTrends(false)}
+        />
+      )}
+
       <header className="bg-white border-b border-[#DC143C] shadow-sm sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -117,6 +160,28 @@ const App: React.FC = () => {
              <div className="text-xs font-medium text-slate-500 hidden sm:block">
                {selectedModel.replace('gemini-', '').replace('latest', '').replace('preview', '')}
              </div>
+             
+             {/* My Moles Button */}
+             <button
+               onClick={() => {
+                 const moles = storageService.getMoles();
+                 if (moles.length === 0) {
+                   alert("Please upload an image and create a mole profile first.");
+                 } else {
+                   // Default to first mole or current selection
+                   const targetId = selectedMoleId || moles[0].id;
+                   const target = moles.find(m => m.id === targetId);
+                   if(target) {
+                     setActiveMoleProfile(target);
+                     setShowTrends(true);
+                   }
+                 }
+               }}
+               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100 hover:bg-indigo-100 transition-colors"
+             >
+               <TrendingUp className="w-4 h-4" /> Trends
+             </button>
+
              <button 
                onClick={() => setShowSettings(true)}
                className="p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors"
@@ -151,6 +216,16 @@ const App: React.FC = () => {
             notesValue={patientNotes}
           />
           
+          {/* Mole Selection Step - Only show if image is uploaded but not analyzed yet */}
+          {image && !result && !isAnalyzing && (
+            <div className="mt-6 animate-in fade-in slide-in-from-top-4">
+              <MoleSelector 
+                selectedMoleId={selectedMoleId}
+                onSelect={setSelectedMoleId}
+              />
+            </div>
+          )}
+
           {/* Analyze Button - Visible only after image is selected */}
           {image && !result && !isAnalyzing && (
             <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center justify-center animate-in fade-in slide-in-from-bottom-4">
@@ -163,6 +238,7 @@ const App: React.FC = () => {
                 Run AI Analysis
               </button>
               <p className="text-xs text-slate-400 mt-3">Click to start the detailed ABCDE & Glasgow assessment</p>
+              {selectedMoleId && <p className="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Will save to history for this mole</p>}
             </div>
           )}
         </div>
