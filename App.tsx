@@ -467,7 +467,7 @@ const App: React.FC = () => {
             AI-Powered <span className="text-blue-600">Skin Screening</span>
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-6">
-            Upload a photo of a mole or skin lesion. Our AI analyzes it using the ABCDE rule and checks medical databases to provide insights.
+            Upload a photo of a mole or skin lesion. DermaCheck AI analyzes it using the ABCDE rule and checks medical databases to provide insights.
           </p>
           
           <button

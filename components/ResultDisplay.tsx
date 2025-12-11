@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import { AnalysisResult } from '../types';
-import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield, Mic } from 'lucide-react';
+import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield, Mic, Microscope, ListChecks } from 'lucide-react';
 import LZString from 'lz-string';
 import { jsPDF } from "jspdf";
 
@@ -135,7 +135,17 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
     setUserFeedback(null);
   }, [result]);
 
-  const { abcdeData, cleanText, confidenceScore, isicScore, hamPrediction, hamConfidence } = useMemo(() => {
+  const { 
+    abcdeData, 
+    cleanText, 
+    confidenceScore, 
+    isicScore, 
+    hamPrediction, 
+    hamConfidence,
+    glasgowScore,
+    riskLevel,
+    dermFeatures
+  } = useMemo(() => {
     const abcdeRegex = /~ABCDE_START~([\s\S]*?)~ABCDE_END~/i;
     const match = text.match(abcdeRegex);
     
@@ -145,6 +155,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
     let isic = "N/A";
     let hamPred = "N/A";
     let hamConf = "N/A";
+    let glasgow = "N/A";
+    let risk = "N/A";
+    let features: string[] = [];
 
     if (match) {
       const rawData = match[1].trim();
@@ -177,6 +190,18 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             return;
         }
 
+        if (lowerLine.includes('glasgow score')) {
+            const m = cleanLine.match(/[:\-\.]\s*(\d+)/);
+            if (m) glasgow = m[1].trim();
+            return;
+        }
+
+        if (lowerLine.includes('risk level')) {
+            const m = cleanLine.match(/[:\-\.]\s*(.*)/);
+            if (m) risk = m[1].trim();
+            return;
+        }
+
         if (lowerLine.includes('ham10000 prediction')) {
             const m = cleanLine.match(/[:\-\.]\s*(.*)/);
             if (m) hamPred = m[1].trim();
@@ -186,6 +211,12 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
         if (lowerLine.includes('ham10000 confidence')) {
             const m = cleanLine.match(/[:\-\.]\s*(.*)/);
             if (m) hamConf = m[1].trim();
+            return;
+        }
+
+        if (lowerLine.includes('dermatoscopic features')) {
+            const m = cleanLine.match(/[:\-\.]\s*(.*)/);
+            if (m) features = m[1].split(',').map(s => s.trim()).filter(Boolean);
             return;
         }
 
@@ -234,7 +265,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
         confidenceScore: confidence, 
         isicScore: isic,
         hamPrediction: hamPred,
-        hamConfidence: hamConf
+        hamConfidence: hamConf,
+        glasgowScore: glasgow,
+        riskLevel: risk,
+        dermFeatures: features
     };
   }, [text]);
 
@@ -279,8 +313,14 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
     const parts = [];
     parts.push("DermaCheck AI Analysis Result");
     if (confidenceScore !== "N/A") parts.push(`Confidence Score: ${confidenceScore}`);
+    if (riskLevel !== "N/A") parts.push(`Overall Risk Level: ${riskLevel}`);
     if (isicScore !== "N/A") parts.push(`ISIC Risk Score: ${isicScore}/10`);
+    if (glasgowScore !== "N/A") parts.push(`Glasgow 7-Point Score: ${glasgowScore}`);
     if (hamPrediction !== "N/A") parts.push(`HAM10000 Prediction: ${hamPrediction} (${hamConfidence})`);
+    
+    if (dermFeatures.length > 0) {
+        parts.push(`Dermatoscopic Features: ${dermFeatures.join(', ')}`);
+    }
     
     if (patientNotes) {
         parts.push("");
@@ -400,29 +440,31 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             }
             textY += 25;
 
-            // ISIC Score
+            // ISIC Score & Glasgow
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text("DIAGNOSTIC SCORES:", textX, textY);
+            textY += 6;
+            
             if (isicScore !== "N/A") {
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(10);
-                doc.setTextColor(100);
-                doc.text("ISIC RISK SCORE:", textX, textY);
-                
                 const scoreNum = parseInt(isicScore) || 0;
-                if (scoreNum <= 3) doc.setTextColor(22, 163, 74);
-                else if (scoreNum <= 6) doc.setTextColor(202, 138, 4);
-                else doc.setTextColor(220, 38, 38);
-                
-                doc.setFontSize(14);
-                doc.text(`${isicScore}/10`, textX, textY + 6);
-                
-                const barWidth = 60;
-                doc.setFillColor(226, 232, 240);
-                doc.rect(textX, textY + 9, barWidth, 4, 'F');
-                if (scoreNum <= 3) doc.setFillColor(22, 163, 74);
-                else if (scoreNum <= 6) doc.setFillColor(202, 138, 4);
-                else doc.setFillColor(220, 38, 38);
-                doc.rect(textX, textY + 9, (barWidth * scoreNum) / 10, 4, 'F');
-                textY += 20;
+                doc.setFontSize(10);
+                doc.setTextColor(30);
+                doc.text(`ISIC Risk: ${isicScore}/10`, textX, textY);
+                textY += 5;
+            }
+            if (glasgowScore !== "N/A") {
+                doc.setFontSize(10);
+                doc.setTextColor(30);
+                doc.text(`Glasgow 7-Point: ${glasgowScore}`, textX, textY);
+                textY += 5;
+            }
+             if (riskLevel !== "N/A") {
+                doc.setFontSize(10);
+                doc.setTextColor(30);
+                doc.text(`Risk Level: ${riskLevel}`, textX, textY);
+                textY += 8;
             }
 
             // HAM10000 Prediction
@@ -448,16 +490,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             console.error("PDF Image Error", e);
             yPos += 30; 
         }
-    } else {
-        // No image logic
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("HAM10000 PREDICTION:", margin, yPos + 50);
-        doc.setFontSize(14);
-        doc.setTextColor(0);
-        doc.text(hamPrediction !== "N/A" ? hamPrediction : "N/A", margin, yPos + 58);
-        yPos += 80;
     }
 
     if (patientNotes) {
@@ -497,6 +529,24 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
              yPos += 8 + (summaryLines.length * 4);
         });
         yPos += 10;
+    }
+    
+    // Advanced Diagnostics
+    if (dermFeatures.length > 0) {
+        if (yPos > pageHeight - 40) { doc.addPage(); yPos = 20; }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text("Advanced Diagnostic Features", margin, yPos);
+        yPos += 8;
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(60);
+        const featuresText = "Observed Dermatoscopic Structures: " + dermFeatures.join(", ");
+        const featureLines = doc.splitTextToSize(featuresText, contentWidth);
+        doc.text(featureLines, margin, yPos);
+        yPos += (featureLines.length * 5) + 10;
     }
 
     doc.setFont("helvetica", "bold");
@@ -616,16 +666,19 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
       <div className="bg-white rounded-b-xl shadow-lg border-x border-b border-[#DC143C] overflow-hidden">
         
         {/* Header Status */}
-        <div className={`px-6 py-4 border-b border-[#DC143C] flex items-center justify-between gap-3 ${isGeneralSuspicious ? 'bg-red-50' : 'bg-teal-50'}`}>
-          <div className="flex items-center gap-3">
-            {isGeneralSuspicious ? <AlertCircle className="w-6 h-6 text-red-600" /> : <CheckCircle className="w-6 h-6 text-teal-600" />}
+        <div className={`px-6 py-4 border-b border-[#DC143C] flex flex-col sm:flex-row items-center justify-between gap-4 ${isGeneralSuspicious ? 'bg-red-50' : 'bg-teal-50'}`}>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {isGeneralSuspicious ? <AlertCircle className="w-8 h-8 text-red-600" /> : <CheckCircle className="w-8 h-8 text-teal-600" />}
             <div>
-                <h2 className={`text-lg font-bold ${isGeneralSuspicious ? 'text-red-800' : 'text-teal-800'}`}>{isGeneralSuspicious ? 'Attention Recommended' : 'Assessment Result'}</h2>
-                {confidenceScore !== "N/A" && <p className={`text-xs font-medium ${isGeneralSuspicious ? 'text-red-600' : 'text-teal-600'}`}>AI Confidence: {confidenceScore}</p>}
+                <h2 className={`text-xl font-bold ${isGeneralSuspicious ? 'text-red-800' : 'text-teal-800'}`}>{isGeneralSuspicious ? 'Attention Recommended' : 'Assessment Result'}</h2>
+                <div className="flex flex-wrap gap-2 mt-1">
+                   {confidenceScore !== "N/A" && <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${isGeneralSuspicious ? 'bg-red-100 text-red-700 border-red-200' : 'bg-teal-100 text-teal-700 border-teal-200'}`}>Conf: {confidenceScore}</span>}
+                   {riskLevel !== "N/A" && <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${riskLevel === 'High' ? 'bg-red-600 text-white border-red-700' : riskLevel === 'Medium' ? 'bg-orange-500 text-white border-orange-600' : 'bg-green-500 text-white border-green-600'}`}>Risk: {riskLevel}</span>}
+                </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-              <button onClick={handleGeneratePDF} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm ${isGeneralSuspicious ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'}`}>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button onClick={handleGeneratePDF} className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm w-full sm:w-auto ${isGeneralSuspicious ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'}`}>
                  <FileText className="w-4 h-4" /> <span className="whitespace-nowrap">Generate PDF Report</span>
               </button>
               <button onClick={() => setShowShareModal(true)} className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}><Share2 className="w-5 h-5" /></button>
@@ -633,7 +686,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
         </div>
         
         {/* Scores Grid */}
-        <div className="px-6 py-4 border-b border-[#DC143C] bg-slate-50/50 grid gap-4 sm:grid-cols-2">
+        <div className="px-6 py-4 border-b border-[#DC143C] bg-slate-50/50 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* ISIC Score */}
             {isicScore !== "N/A" && (
                 <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
@@ -649,10 +702,55 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                     </div>
                 </div>
             )}
+
+            {/* Glasgow 7-Point Checklist */}
+            {glasgowScore !== "N/A" && (
+                <div className="bg-sky-50/50 p-3 rounded-xl border border-sky-100 relative group/glasgow">
+                    <div className="flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                            <ListChecks className="w-4 h-4 text-sky-600" />
+                            <h3 className="font-semibold text-sky-900 text-xs">Glasgow 7-Point</h3>
+                            {/* Tooltip Icon */}
+                            <div className="relative group/tooltip">
+                                <HelpCircle className="w-3 h-3 text-sky-400 cursor-help" />
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-4 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-left font-normal leading-relaxed">
+                                    <p className="mb-2 font-semibold text-sky-300">Glasgow 7-Point Checklist Criteria:</p>
+                                    
+                                    <div className="mb-2">
+                                        <strong className="block text-sky-200 mb-0.5">Major Criteria (2 points each):</strong>
+                                        <ul className="list-disc pl-3 space-y-1 text-slate-300">
+                                            <li><span className="text-white">Change in Size:</span> Accelerated growth indicates instability.</li>
+                                            <li><span className="text-white">Irregular Shape:</span> Asymmetry suggests uneven cell division.</li>
+                                            <li><span className="text-white">Irregular Color:</span> Varied pigmentation depths.</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <strong className="block text-sky-200 mb-0.5">Minor Criteria (1 point each):</strong>
+                                        <ul className="list-disc pl-3 space-y-1 text-slate-300">
+                                            <li><span className="text-white">Diameter &ge; 7mm:</span> Larger lesions carry higher risk.</li>
+                                            <li><span className="text-white">Inflammation:</span> Redness/swelling (immune response).</li>
+                                            <li><span className="text-white">Oozing/Crusting:</span> Tissue breakdown sign.</li>
+                                            <li><span className="text-white">Sensation Change:</span> Itch or pain can signal activity.</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${parseInt(glasgowScore) >= 3 ? 'bg-red-200 text-red-800' : 'bg-sky-200 text-sky-800'}`}>{glasgowScore}</span>
+                    </div>
+                     <div className="w-full bg-sky-200 rounded-full h-1.5 overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-1000 ${parseInt(glasgowScore) >= 3 ? 'bg-red-500' : 'bg-sky-500'}`} style={{ width: `${Math.min((parseInt(glasgowScore) / 7) * 100, 100)}%` }}></div>
+                    </div>
+                    <p className="text-[10px] text-sky-600 mt-1.5 text-right">{parseInt(glasgowScore) >= 3 ? 'Referral Recommended' : 'Low Score'}</p>
+                </div>
+            )}
             
             {/* HAM10000 Prediction */}
             {hamPrediction !== "N/A" && (
-                <div className="bg-violet-50/50 p-3 rounded-xl border border-violet-100 relative group">
+                <div className="bg-violet-50/50 p-3 rounded-xl border border-violet-100 relative group sm:col-span-2 lg:col-span-1">
                      <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
                             <BrainCircuit className="w-4 h-4 text-violet-600" />
@@ -671,9 +769,6 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                     <div className="text-xs text-violet-800 font-medium truncate">
                         Matched: <span className="font-bold">{hamPrediction}</span>
                     </div>
-                     <p className="text-[10px] text-violet-600 mt-1 leading-tight opacity-80">
-                         Methodology: Feature vector comparison against HAM10000 dataset centroids.
-                     </p>
                 </div>
             )}
         </div>
@@ -692,6 +787,22 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
         )}
 
         <div className="px-6 pt-6">
+          {/* Advanced Dermatoscopic Features Tags */}
+          {dermFeatures.length > 0 && (
+             <div className="mb-6 animate-in fade-in slide-in-from-top-2">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                    <Microscope className="w-3.5 h-3.5" /> Identified Dermatoscopic Features
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                    {dermFeatures.map((feature, idx) => (
+                        <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                           {feature}
+                        </span>
+                    ))}
+                </div>
+             </div>
+          )}
+
           {/* ABCDE Scorecard */}
           {abcdeData.length > 0 && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mb-8">

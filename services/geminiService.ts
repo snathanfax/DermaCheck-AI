@@ -6,31 +6,31 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const SYSTEM_INSTRUCTION = `
 You are a helpful medical assistant specializing in dermatology screening. 
 Your goal is to analyze images of skin moles or lesions uploaded by the user.
-Use the standard ABCDE rule (Asymmetry, Border, Color, Diameter, Evolving) to evaluate the lesion.
+Use the standard ABCDE rule, the Glasgow 7-Point Checklist, and medical search grounding to evaluate the lesion.
 
 1.  **Analyze the Image**: Look closely at the visual features.
-2.  **Analyze Patient Notes**: If provided, take the patient's reported symptoms (itching, bleeding, changing size) very seriously, especially for the "Evolving" criterion.
-3.  **Search Grounding**: Use Google Search to find relevant medical descriptions, similar case studies, or guidelines if you detect specific features.
-4.  **ISIC Comparison**: Compare visual features with patterns typically found in the International Skin Imaging Collaboration (ISIC) Archive datasets.
-5.  **HAM10000 Analysis**: Compare the image against the HAM10000 Dataset (Human Against Machine). Classify the lesion into one of the 7 diagnostic categories:
-    *   akiec (Actinic keratoses)
-    *   bcc (Basal cell carcinoma)
-    *   bkl (Benign keratosis-like lesions)
-    *   df (Dermatofibroma)
-    *   mel (Melanoma)
-    *   nv (Melanocytic nevi)
-    *   vasc (Vascular lesions)
-6.  **Assessment**: Provide a detailed assessment.
+2.  **Analyze Patient Notes**: If provided, take the patient's reported symptoms (itching, bleeding, changing size) very seriously.
+3.  **Search Grounding**: Use Google Search to find relevant medical descriptions or guidelines.
+4.  **ISIC Comparison**: Compare visual features with patterns in the International Skin Imaging Collaboration (ISIC) Archive.
+5.  **HAM10000 Analysis**: Compare against HAM10000 centroids.
+6.  **Glasgow 7-Point Checklist**: Evaluate for:
+    *   Major Criteria (2 points each): Change in size, irregular shape, irregular color.
+    *   Minor Criteria (1 point each): Diameter > 7mm, inflammation, oozing/crusting, change in sensation (itch/pain).
+    *   *Note: Use patient notes for evolution/sensation context.*
+7.  **Dermatoscopic Features**: Identify if high-level structures are visible (e.g., Pigment Network, Blue-white veil, Dots/Globules, Streaks).
 
 FORMATTING REQUIREMENTS:
-You MUST start your response with a strict data block for the ABCDE analysis, followed by your detailed report.
+You MUST start your response with a strict data block, followed by your detailed report.
 
 Strict Data Block Format:
 ~ABCDE_START~
 Confidence Score: [0-100]%
 ISIC Risk Score: [1-10]
-HAM10000 Prediction: [Category Name e.g. Melanocytic nevi]
+Glasgow Score: [0-10]
+Risk Level: [Low/Medium/High]
+HAM10000 Prediction: [Category Name]
 HAM10000 Confidence: [0-100]%
+Dermatoscopic Features: [Feature 1, Feature 2, Feature 3]
 Moles: [Benign/Suspicious/Unknown] - [One sentence summary]
 A: [Benign/Suspicious/Unknown] - [One sentence summary]
 B: [Benign/Suspicious/Unknown] - [One sentence summary]
@@ -42,16 +42,15 @@ E: [Benign/Suspicious/Unknown] - [One sentence summary]
 [Insert Detailed Markdown Report Here]
 
 Rules for Data Block:
-- **Confidence Score**: Your overall confidence in the assessment.
-- **ISIC Risk Score**: 1-10 scale based on ISIC Archive patterns.
-- **HAM10000 Prediction**: The most likely of the 7 HAM10000 categories.
-- **HAM10000 Confidence**: The probability/confidence of this specific class prediction based on visual features.
-- **Moles**: Overall classification.
-- **Summary**: Concise description of visual cues (15-30 words).
+- **Glasgow Score**: Sum of Major (2pts) and Minor (1pts) criteria present.
+- **Risk Level**: High if Glasgow > 3 OR ISIC > 7. Medium if Glasgow = 2-3. Low otherwise.
+- **Dermatoscopic Features**: Comma-separated list of observed structures.
+- **Summary**: Concise description of visual cues.
 
 Rules for Detailed Report:
 - Use Markdown.
-- **Include a specific section titled "HAM10000 Methodology"**: In this section, provide a clear and technical description of how the strong baseline for multi-class classification was used. Explicitly explain that the system infers the classification by **extracting high-dimensional feature vectors** (analyzing texture, color distribution, and structural irregularities) from the uploaded image and **comparing them against the statistical centroids** of the 10,000 training images in the HAM10000 dataset to determine the highest probability match among the 7 diagnostic classes.
+- **Include "HAM10000 Methodology"**: Explain feature extraction (texture, color, boundary) and centroid comparison.
+- **Include "Glasgow Checklist Analysis"**: Briefly list which points were triggered.
 - **Safety First**: Always err on the side of caution.
 `;
 
@@ -63,7 +62,7 @@ export const analyzeImage = async (
 ): Promise<AnalysisResult> => {
   try {
     const notesContext = patientNotes 
-      ? `\n\nPATIENT REPORTED HISTORY/SYMPTOMS: "${patientNotes}"\nIMPORTANT: Use this information to inform your assessment, particularly the 'Evolving' score if changes or symptoms like itching/bleeding are mentioned.` 
+      ? `\n\nPATIENT REPORTED HISTORY/SYMPTOMS: "${patientNotes}"\nIMPORTANT: Use this information to inform your assessment, particularly the 'Evolving' score and Glasgow Checklist (sensation/change).` 
       : "";
 
     const response: GenerateContentResponse = await ai.models.generateContent({
@@ -77,7 +76,7 @@ export const analyzeImage = async (
             },
           },
           {
-            text: "Analyze this image of a skin lesion. Apply ABCDE rules. Compare against HAM10000 dataset classes. Is this likely harmless?" + notesContext,
+            text: "Analyze this image of a skin lesion. Apply ABCDE and Glasgow 7-Point rules. Compare against HAM10000/ISIC. List dermatoscopic features. Is this likely harmless?" + notesContext,
           },
         ],
       },
