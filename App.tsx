@@ -324,7 +324,7 @@ const App: React.FC = () => {
                 </button>
 
                 {showAbcdeInfo && (
-                    <div className="mt-3 w-full bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm text-slate-600 animate-in fade-in slide-in-from-top-2">
+                    <div className="mt-3 w-full bg-slate-50 border border-[#DC143C] rounded-xl p-4 text-sm text-slate-600 animate-in fade-in slide-in-from-top-2">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="flex gap-3">
                                 <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">A</div>
@@ -356,7 +356,7 @@ const App: React.FC = () => {
             {selectedImage && (
               <div className="w-full animate-fade-in-up">
                 {analysis.status === 'analyzing' ? (
-                  <div className="w-full bg-slate-50 rounded-2xl p-6 border border-blue-100 shadow-lg shadow-blue-50/50">
+                  <div className="w-full bg-slate-50 rounded-2xl p-6 border border-[#DC143C] shadow-lg shadow-blue-50/50">
                      <div className="flex items-center justify-between mb-3">
                        <div className="flex items-center gap-2">
                          <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
@@ -468,7 +468,7 @@ const App: React.FC = () => {
                 <div 
                   key={item.id}
                   onClick={() => loadFromHistory(item)}
-                  className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group flex items-start gap-4"
+                  className="bg-white p-4 rounded-xl border border-[#DC143C] shadow-sm hover:shadow-md hover:border-blue-200 transition-all cursor-pointer group flex items-start gap-4"
                 >
                   {/* Thumbnail */}
                   <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-100">
@@ -513,15 +513,15 @@ const App: React.FC = () => {
 
         {/* Informational Footer */}
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center sm:text-left border-t border-slate-200 pt-10 mb-10">
-          <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+          <div className="p-4 bg-white rounded-xl shadow-sm border border-[#DC143C]">
             <div className="text-blue-500 font-bold mb-2">Asymmetry</div>
             <p className="text-xs text-slate-500">One half of the mole does not match the other half.</p>
           </div>
-          <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+          <div className="p-4 bg-white rounded-xl shadow-sm border border-[#DC143C]">
             <div className="text-blue-500 font-bold mb-2">Border</div>
             <p className="text-xs text-slate-500">Edges are ragged, notched, or blurred.</p>
           </div>
-          <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+          <div className="p-4 bg-white rounded-xl shadow-sm border border-[#DC143C]">
             <div className="text-blue-500 font-bold mb-2">Color</div>
             <p className="text-xs text-slate-500">Uneven color (shades of brown, tan, black).</p>
           </div>

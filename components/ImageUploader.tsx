@@ -436,7 +436,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   if (preview) {
     return (
-      <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-xl border-4 border-white bg-slate-900 group select-none">
+      <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-xl border-4 border-[#DC143C] bg-slate-900 group select-none">
         
         {/* Crop Mode Overlay */}
         {isCropping ? (
@@ -612,7 +612,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   if (isCameraOpen) {
     return (
-      <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-xl bg-black aspect-[3/4] md:aspect-video flex flex-col">
+      <div className="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden shadow-xl bg-black border-4 border-[#DC143C] aspect-[3/4] md:aspect-video flex flex-col">
         <video 
           ref={videoRef}
           autoPlay 
@@ -731,7 +731,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
         className={`relative flex flex-col items-center justify-center w-full h-56 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 ease-in-out
           ${dragActive 
             ? 'border-blue-500 bg-blue-50 scale-[1.02]' 
-            : 'border-slate-300 bg-slate-50 hover:bg-white hover:border-slate-400'
+            : 'border-[#DC143C] bg-slate-50 hover:bg-white'
           }`}
       >
         <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">

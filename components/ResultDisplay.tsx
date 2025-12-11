@@ -554,7 +554,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
               onClick={() => setShowShareModal(false)}
             ></div>
             
-            <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="relative bg-white rounded-xl shadow-2xl border border-[#DC143C] w-full max-w-xs sm:max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                   <h3 className="font-semibold text-slate-800 flex items-center gap-2">
                     <Share2 className="w-4 h-4 text-blue-500" /> Share & Export
@@ -624,10 +624,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
        )}
 
       <div className={`p-1 rounded-t-xl bg-gradient-to-r ${isGeneralSuspicious ? 'from-orange-500 to-red-500' : 'from-green-400 to-teal-500'}`}></div>
-      <div className="bg-white rounded-b-xl shadow-lg border-x border-b border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-b-xl shadow-lg border-x border-b border-[#DC143C] overflow-hidden">
         
         {/* Header Status */}
-        <div className={`px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3 ${isGeneralSuspicious ? 'bg-red-50' : 'bg-teal-50'}`}>
+        <div className={`px-6 py-4 border-b border-[#DC143C] flex items-center justify-between gap-3 ${isGeneralSuspicious ? 'bg-red-50' : 'bg-teal-50'}`}>
           <div className="flex items-center gap-3">
             {isGeneralSuspicious ? (
               <AlertCircle className="w-6 h-6 text-red-600" />
@@ -780,7 +780,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
 
         {/* Sources / Grounding */}
         {groundingChunks && groundingChunks.length > 0 && (
-          <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 mt-6 rounded-b-xl">
+          <div className="bg-slate-50 px-6 py-4 border-t border-[#DC143C] mt-6 rounded-b-xl">
             <div className="flex items-center gap-2 mb-3 text-slate-500">
               <Search className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">References & Grounding Sources</span>
@@ -795,7 +795,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                     href={chunk.web.uri}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-start gap-3 p-3 rounded-lg bg-white border border-slate-200 hover:border-blue-400 hover:shadow-md hover:translate-y-[-1px] transition-all text-sm group"
+                    className="flex items-start gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-blue-400 hover:shadow-md hover:translate-y-[-1px] transition-all text-sm group"
                   >
                     <div className="mt-0.5 bg-blue-50 p-1.5 rounded-full text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                          <ExternalLink className="w-3 h-3" />
