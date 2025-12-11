@@ -452,8 +452,27 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                 doc.setFontSize(10);
                 doc.setTextColor(30);
                 doc.text(`ISIC Risk: ${isicScore}/10`, textX, textY);
-                textY += 5;
+                
+                // Visual ISIC Bar in PDF
+                const barWidth = 60;
+                const percent = Math.min(scoreNum, 10) / 10;
+                
+                let r=0, g=0, b=0;
+                // Match UI Colors: Green (<=3), Yellow (<=6), Red (>6)
+                if(scoreNum <= 3) { r=34; g=197; b=94; } // Green-500
+                else if(scoreNum <= 6) { r=234; g=179; b=8; } // Yellow-500
+                else { r=239; g=68; b=68; } // Red-500
+
+                doc.setFillColor(226, 232, 240); // bg-slate-200
+                doc.rect(textX, textY + 2, barWidth, 3, 'F');
+                doc.setFillColor(r, g, b);
+                doc.rect(textX, textY + 2, barWidth * percent, 3, 'F');
+
+                textY += 10;
+            } else {
+                 textY += 5;
             }
+
             if (glasgowScore !== "N/A") {
                 doc.setFontSize(10);
                 doc.setTextColor(30);
