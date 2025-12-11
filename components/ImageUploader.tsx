@@ -638,21 +638,26 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   const renderNotesSection = () => (
     <div className={`mt-6 mb-2 relative z-20 transition-all duration-300 ${notesValue ? 'bg-emerald-50/50' : ''} rounded-xl p-2`}>
-        <div className="flex items-center justify-between mb-2 px-1">
-            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Mic className="w-4 h-4 text-blue-600" />
-                Patient Notes
-                {notesValue && !isRecording && (
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
-                        <CheckCircle2 className="w-3 h-3" /> Ready
-                    </span>
-                )}
-                {isRecording && (
-                     <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full animate-pulse border border-red-200">
-                        <span className="w-2 h-2 bg-red-500 rounded-full"></span> Listening...
-                     </span>
-                )}
-            </label>
+        <div className="mb-2 px-1">
+            <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Mic className="w-4 h-4 text-blue-600" />
+                    Patient Notes
+                    {notesValue && !isRecording && (
+                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3" /> Ready
+                        </span>
+                    )}
+                    {isRecording && (
+                         <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full animate-pulse border border-red-200">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span> Listening...
+                         </span>
+                    )}
+                </label>
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+               <span className="font-semibold text-slate-600">Tip:</span> Mention onset date, recent changes (shape, size, color), symptoms (itching, bleeding), and any family history of skin cancer.
+            </p>
         </div>
         
         {voiceError && (
@@ -674,7 +679,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 value={notesValue}
                 onChange={handleNotesChangeLocal}
                 disabled={isRecording} 
-                placeholder={isRecording ? "Listening..." : "Describe symptoms (itching, bleeding, changing size)..."}
+                placeholder={isRecording ? "Listening..." : "Example: 'I noticed this mole 3 months ago on my arm. It has grown slightly darker and itches occasionally...'"}
                 className={`w-full p-4 pr-12 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y shadow-sm transition-all outline-none ${
                     isRecording 
                       ? 'border-2 border-red-400 ring-2 ring-red-100 bg-red-50 text-slate-800'

@@ -7,7 +7,7 @@ import { TrendAnalysis } from './components/TrendAnalysis';
 import { analyzeImage } from './services/geminiService';
 import { storageService } from './services/storageService';
 import { AnalysisResult, MoleProfile } from './types';
-import { ListChecks, Loader2, Stethoscope, Microscope, Activity, Settings, X, CheckCircle, RotateCcw, TrendingUp } from 'lucide-react';
+import { ListChecks, Loader2, Stethoscope, Microscope, Activity, Settings, X, CheckCircle, RotateCcw, TrendingUp, Volume2, StopCircle } from 'lucide-react';
 
 const App: React.FC = () => {
   const [image, setImage] = useState<{ base64: string; mimeType: string } | null>(null);
@@ -25,17 +25,48 @@ const App: React.FC = () => {
   const [showTrends, setShowTrends] = useState(false);
   const [activeMoleProfile, setActiveMoleProfile] = useState<MoleProfile | null>(null);
 
+  // Voice Instruction State
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
   useEffect(() => {
     const savedModel = localStorage.getItem("derma_model");
     if (savedModel) {
       setSelectedModel(savedModel);
     }
+
+    // Cleanup speech on unmount
+    return () => {
+      window.speechSynthesis.cancel();
+    };
   }, []);
 
   const saveModelSetting = (model: string) => {
     setSelectedModel(model);
     localStorage.setItem("derma_model", model);
     setShowSettings(false);
+  };
+
+  const handleVoiceInstruction = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const text = "Welcome to Derma Check AI. Here is how to use this app: First, upload a clear, close-up photo of your mole, or take a new one using the camera button. Second, you can record a voice note describing any symptoms like itching, bleeding, or changes in size. Finally, click the Run AI Analysis button to receive a detailed assessment based on medical criteria.";
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9; // Slightly slower for clarity
+    
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = (e) => {
+      console.error("Speech synthesis error", e);
+      setIsSpeaking(false);
+    };
+    
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
   };
 
   const handleImageSelect = (base64: string, mimeType: string) => {
@@ -50,6 +81,12 @@ const App: React.FC = () => {
     
     setIsAnalyzing(true);
     setError(null);
+    
+    // Stop instructions if playing
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
 
     try {
       // Pass patientNotes and selectedModel to the analysis service
@@ -202,9 +239,23 @@ const App: React.FC = () => {
               <h2 className="text-2xl font-bold text-center mb-2 text-slate-800">
                 Dermatology Screening Assistant
               </h2>
-              <p className="text-center text-slate-600 mb-8 max-w-lg mx-auto">
+              <p className="text-center text-slate-600 mb-5 max-w-lg mx-auto">
                 Upload a clear, close-up photo of a skin mole or lesion for instant AI assessment using ABCDE and Glasgow 7-Point criteria.
               </p>
+              
+              <div className="flex justify-center mb-8">
+                <button 
+                  onClick={handleVoiceInstruction}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 border shadow-sm ${
+                    isSpeaking 
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200 ring-4 ring-indigo-50/50' 
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 hover:shadow-md'
+                  }`}
+                >
+                  {isSpeaking ? <StopCircle className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {isSpeaking ? "Stop Instructions" : "Hear How to Use App"}
+                </button>
+              </div>
             </>
           )}
 

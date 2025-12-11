@@ -46,10 +46,65 @@ const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknow
     unknown: "Cannot be determined from a single photo. Evolution requires monitoring changes over time or comparison with past photos."
   },
   'Moles': {
-    benign: "Common moles (nevi) are typically small, round, and uniform accumulations of pigment cells. They usually appear in childhood or early adulthood and remain stable.",
-    suspicious: "Atypical moles (dysplastic nevi) may be larger and irregular. While not always cancerous, they indicate a higher risk phenotype. 'Ugly Ducklings'—moles that look different from your others—warrant closer inspection.",
-    unknown: "General classification unclear. The lesion does not clearly fit standard common mole patterns based on this image alone."
+    benign: "Common Moles (Nevi): Typically small, round, and uniform spots appearing in childhood. They are symmetrical, have even color, and do not change over time.",
+    suspicious: "Atypical Moles (Dysplastic Nevi): Often larger with irregular borders. BEWARE the 'Ugly Duckling' Sign: a mole that looks significantly different from your surrounding moles. This outlier status is a strong warning sign.",
+    unknown: "Classification unclear. If this mole stands out as different from your others (Ugly Duckling), seek professional evaluation."
   }
+};
+
+// Dermatoscopic Features Definition Map
+const DERM_FEATURE_INFO: Record<string, { desc: string; color: string }> = {
+  "Pigment Network": { 
+    desc: "A honeycomb-like pattern of brownish lines. Atypical, broadened, or broken networks can suggest melanoma.", 
+    color: "bg-amber-100 text-amber-900 border-amber-200" 
+  },
+  "Dots": { 
+    desc: "Small round structures (<0.1mm). Irregularly distributed dots at the periphery can indicate growth.", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  },
+  "Globules": { 
+    desc: "Larger round structures (>0.1mm). Peripheral globules are a sign of an enlarging lesion.", 
+    color: "bg-stone-100 text-stone-800 border-stone-200" 
+  },
+  "Streaks": { 
+    desc: "Radial lines or pseudopods at the periphery. Often indicates the lesion is growing rapidly (e.g., Reed/Spitz nevus or melanoma).", 
+    color: "bg-red-100 text-red-900 border-red-200" 
+  },
+  "Blue-White Veil": { 
+    desc: "Irregular, structureless blue pigmentation with an overlying white haze. A highly specific sign of invasive melanoma.", 
+    color: "bg-blue-100 text-blue-900 border-blue-200" 
+  },
+  "Regression": { 
+    desc: "White scar-like depigmentation or peppering. Indicates the immune system is attacking the tumor.", 
+    color: "bg-gray-100 text-gray-700 border-gray-200" 
+  },
+  "Vascular": { 
+    desc: "Visible blood vessels. 'Arborizing' (tree-like) vessels are typical of Basal Cell Carcinoma.", 
+    color: "bg-rose-100 text-rose-900 border-rose-200" 
+  },
+  "Blotches": { 
+    desc: "Large areas of structureless pigment that obscure the underlying network.", 
+    color: "bg-orange-100 text-orange-900 border-orange-200" 
+  },
+  "Shiny White": {
+    desc: "Shiny white lines or streaks seen under polarized light, often associated with malignancy.",
+    color: "bg-indigo-50 text-indigo-900 border-indigo-200"
+  }
+};
+
+// Helper to get info for a feature string (fuzzy match)
+const getDermFeatureInfo = (feature: string) => {
+  const lower = feature.toLowerCase();
+  // Check specifically for "blue-white" first to avoid partial matches on "white"
+  if (lower.includes("blue-white") || lower.includes("veil")) return DERM_FEATURE_INFO["Blue-White Veil"];
+  
+  for (const [key, info] of Object.entries(DERM_FEATURE_INFO)) {
+    if (lower.includes(key.toLowerCase())) return info;
+  }
+  return { 
+    desc: "A specific microscopic structure identified by the AI in the lesion's pattern.", 
+    color: "bg-slate-100 text-slate-700 border-slate-200" 
+  };
 };
 
 // Medical definitions map
@@ -180,10 +235,48 @@ const ABCDEVisual: React.FC<{ type: string }> = ({ type }) => {
           </div>
         </div>
       );
+    case 'Moles':
+      return (
+        <div className={commonClasses} title="Concept: Common Pattern vs Ugly Duckling">
+          <div className="flex flex-col items-center gap-1">
+             <div className="flex gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B]"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B]"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B]"></div>
+             </div>
+             <div className="flex gap-1 mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B]"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B]"></div>
+             </div>
+             <span className="text-[9px] font-semibold text-green-700">Uniform</span>
+          </div>
+          <div className="h-10 w-px bg-slate-300"></div>
+          <div className="flex flex-col items-center gap-1">
+             <div className="flex gap-1 items-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B] opacity-50"></div>
+                {/* The Ugly Duckling */}
+                <div className="w-4 h-4 rounded-full bg-[#3E2723] border border-red-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-[#8B5A2B] opacity-50"></div>
+             </div>
+             <span className="text-[9px] font-semibold text-red-700">Ugly Duckling</span>
+          </div>
+        </div>
+      );
     default:
       return null;
   }
 };
+
+// Simple Tooltip Helper Component
+const SimpleTooltip: React.FC<{ content: string; children: React.ReactNode; className?: string }> = ({ content, children, className = "" }) => (
+  <div className={`relative group ${className}`}>
+    {children}
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[60]">
+      {content}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+    </div>
+  </div>
+);
 
 // Helper to process text and insert search links for medical terms
 const processMedicalTerms = (text: string): React.ReactNode[] | string => {
@@ -770,23 +863,31 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                </div>
                <div className="p-4 space-y-3">
                   {navigator.share && (
-                    <button onClick={handleNativeShare} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Share via device options">
-                       <div className="bg-blue-100 p-2 rounded-full text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors"><Share2 className="w-5 h-5" /></div>
-                       <div className="text-left"><div className="font-medium text-slate-700">Share via...</div></div>
-                    </button>
+                    <SimpleTooltip content="Share via device options" className="w-full">
+                      <button onClick={handleNativeShare} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                         <div className="bg-blue-100 p-2 rounded-full text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors"><Share2 className="w-5 h-5" /></div>
+                         <div className="text-left"><div className="font-medium text-slate-700">Share via...</div></div>
+                      </button>
+                    </SimpleTooltip>
                   )}
-                  <button onClick={handleCopyLink} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Generate sharable link">
-                       <div className="bg-purple-100 p-2 rounded-full text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">{linkCopyFeedback ? <CheckCircle className="w-5 h-5" /> : <Link className="w-5 h-5" />}</div>
-                       <div className="text-left"><div className="font-medium text-slate-700">{linkCopyFeedback ? 'Link Copied!' : 'Copy Link'}</div></div>
-                  </button>
-                  <button onClick={handleCopy} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Copy text report to clipboard">
-                       <div className="bg-teal-100 p-2 rounded-full text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">{copyFeedback ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}</div>
-                       <div className="text-left"><div className="font-medium text-slate-700">{copyFeedback ? 'Copied!' : 'Copy Text'}</div></div>
-                  </button>
-                  <button onClick={handleGeneratePDF} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Download analysis as PDF">
-                       <div className="bg-orange-100 p-2 rounded-full text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
-                       <div className="text-left"><div className="font-medium text-slate-700">Download PDF Report</div></div>
-                  </button>
+                  <SimpleTooltip content="Generate sharable link" className="w-full">
+                    <button onClick={handleCopyLink} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                         <div className="bg-purple-100 p-2 rounded-full text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">{linkCopyFeedback ? <CheckCircle className="w-5 h-5" /> : <Link className="w-5 h-5" />}</div>
+                         <div className="text-left"><div className="font-medium text-slate-700">{linkCopyFeedback ? 'Link Copied!' : 'Copy Link'}</div></div>
+                    </button>
+                  </SimpleTooltip>
+                  <SimpleTooltip content="Copy text report to clipboard" className="w-full">
+                    <button onClick={handleCopy} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                         <div className="bg-teal-100 p-2 rounded-full text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">{copyFeedback ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}</div>
+                         <div className="text-left"><div className="font-medium text-slate-700">{copyFeedback ? 'Copied!' : 'Copy Text'}</div></div>
+                    </button>
+                  </SimpleTooltip>
+                  <SimpleTooltip content="Download analysis as PDF" className="w-full">
+                    <button onClick={handleGeneratePDF} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                         <div className="bg-orange-100 p-2 rounded-full text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
+                         <div className="text-left"><div className="font-medium text-slate-700">Download PDF Report</div></div>
+                    </button>
+                  </SimpleTooltip>
                </div>
             </div>
          </div>
@@ -813,10 +914,14 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button onClick={handleGeneratePDF} title="Generate detailed PDF report" className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm w-full sm:w-auto ${isGeneralSuspicious ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'}`}>
-                 <FileText className="w-4 h-4" /> <span className="whitespace-nowrap">Generate PDF Report</span>
-              </button>
-              <button onClick={() => setShowShareModal(true)} title="Share or export results" className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}><Share2 className="w-5 h-5" /></button>
+              <SimpleTooltip content="Generate detailed PDF report">
+                <button onClick={handleGeneratePDF} className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm w-full sm:w-auto ${isGeneralSuspicious ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'}`}>
+                  <FileText className="w-4 h-4" /> <span className="whitespace-nowrap">Generate PDF Report</span>
+                </button>
+              </SimpleTooltip>
+              <SimpleTooltip content="Share or export results">
+                <button onClick={() => setShowShareModal(true)} className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}><Share2 className="w-5 h-5" /></button>
+              </SimpleTooltip>
           </div>
         </div>
         
@@ -907,17 +1012,21 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                             {/* Tooltip Icon */}
                             <div className="relative group/tooltip">
                                 <HelpCircle className="w-3 h-3 text-violet-400 cursor-help" />
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
-                                    Using a <strong>strong baseline for multi-class classification</strong>, the AI performs <strong>feature extraction</strong> to identify complex micro-structures.
-                                    <br/><br/>
-                                    It analyzes:
-                                    <ul className="list-disc pl-4 mt-1 space-y-0.5 text-left text-slate-300">
-                                      <li><strong className="text-white">Texture:</strong> Pigment networks, dots, and globules.</li>
-                                      <li><strong className="text-white">Color:</strong> Blue-white veils and irregular pigmentation.</li>
-                                      <li><strong className="text-white">Boundary:</strong> Abrupt cutoffs and streaks.</li>
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-96 p-4 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-left font-normal leading-relaxed">
+                                    <p className="mb-2">The AI utilizes a deep learning model trained on the <strong>HAM10000 dataset</strong> (10,000+ dermatoscopic images).</p>
+                                    
+                                    <strong className="block text-violet-300 mb-1">1. Feature Extraction:</strong>
+                                    <p className="mb-1 text-slate-300">The neural network dissects the image into high-dimensional vectors, analyzing specific micro-structures:</p>
+                                    <ul className="list-disc pl-4 mb-2 space-y-1 text-slate-300">
+                                      <li><strong className="text-white">Texture & Pattern:</strong> Reticular pigment networks, chaotic dots/globules, and structureless zones.</li>
+                                      <li><strong className="text-white">Color Variance:</strong> Blue-white veils (depth indicator), regression structures (white scarring), and multi-shade pigmentation.</li>
+                                      <li><strong className="text-white">Boundary Metrics:</strong> Edge abruptness, radial streaming, and pseudopods.</li>
                                     </ul>
-                                    <br/>
-                                    It then classifies the lesion by calculating the proximity of these features to the <strong>centroids</strong> of the 10,000 training images in the HAM10000 dataset.
+                                    
+                                    <strong className="block text-violet-300 mb-1">2. Centroid Analysis:</strong>
+                                    <p className="text-slate-300">
+                                      Your lesion's feature vector is mapped into latent space. The model calculates the statistical distance (similarity) to the <strong>centroids</strong> (average representations) of known classes like Melanoma or Nevus. The closest match determines the classification.
+                                    </p>
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                                 </div>
                             </div>
@@ -983,15 +1092,28 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
           {/* Advanced Dermatoscopic Features Tags */}
           {dermFeatures.length > 0 && (
              <div className="mb-6 animate-in fade-in slide-in-from-top-2">
-                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                    <Microscope className="w-3.5 h-3.5" /> Identified Dermatoscopic Features
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                    <Microscope className="w-3.5 h-3.5" /> Identified Dermatoscopic Structures
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                    {dermFeatures.map((feature, idx) => (
-                        <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                           {feature}
-                        </span>
-                    ))}
+                    {dermFeatures.map((feature, idx) => {
+                        const info = getDermFeatureInfo(feature);
+                        return (
+                            <div key={idx} className="relative group cursor-help">
+                                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border shadow-sm transition-transform hover:scale-105 ${info.color}`}>
+                                   {feature}
+                                   <Info className="w-3 h-3 ml-1.5 opacity-50" />
+                                </span>
+                                
+                                {/* Feature Tooltip */}
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 text-center leading-relaxed">
+                                    <span className="font-bold block mb-1 text-slate-200 border-b border-slate-700 pb-1">{feature}</span>
+                                    {info.desc}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
              </div>
           )}
@@ -1062,8 +1184,12 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
               <>
                 <p className="text-sm text-slate-500 mb-3">Was this analysis helpful?</p>
                 <div className="flex gap-4">
-                  <button onClick={() => handleFeedback('up')} title="Mark as helpful" className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-600 transition-all text-sm group"><ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" /> Yes</button>
-                  <button onClick={() => handleFeedback('down')} title="Mark as not helpful" className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all text-sm group"><ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" /> No</button>
+                  <SimpleTooltip content="Mark as helpful">
+                    <button onClick={() => handleFeedback('up')} className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-600 transition-all text-sm group"><ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" /> Yes</button>
+                  </SimpleTooltip>
+                  <SimpleTooltip content="Mark as not helpful">
+                    <button onClick={() => handleFeedback('down')} className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all text-sm group"><ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" /> No</button>
+                  </SimpleTooltip>
                 </div>
               </>
             ) : (
