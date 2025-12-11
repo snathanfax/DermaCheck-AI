@@ -804,6 +804,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                 <div className="flex flex-wrap gap-2 mt-1">
                    {confidenceScore !== "N/A" && <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${isGeneralSuspicious ? 'bg-red-100 text-red-700 border-red-200' : 'bg-teal-100 text-teal-700 border-teal-200'}`}>Conf: {confidenceScore}</span>}
                    {riskLevel !== "N/A" && <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${riskLevel === 'High' ? 'bg-red-600 text-white border-red-700' : riskLevel === 'Medium' ? 'bg-orange-500 text-white border-orange-600' : 'bg-green-500 text-white border-green-600'}`}>Risk: {riskLevel}</span>}
+                   {patientNotes && (
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full border bg-blue-100 text-blue-700 border-blue-200 flex items-center gap-1" title="Patient notes were analyzed">
+                        <Mic className="w-3 h-3" /> Notes Included
+                      </span>
+                   )}
                 </div>
             </div>
           </div>

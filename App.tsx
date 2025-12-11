@@ -508,9 +508,9 @@ const App: React.FC = () => {
               />
             </div>
 
-            {/* Step 2: Action Button or Progress */}
+            {/* Step 2: Action Button or Progress - Added explicit margin and background to separate from potential overlap */}
             {selectedImage && (
-              <div className="w-full mt-8 pt-6 border-t border-slate-100 animate-fade-in-up">
+              <div className="w-full mt-10 pt-6 border-t border-slate-100 animate-fade-in-up relative z-20 bg-white rounded-b-xl">
                 {analysis.status === 'analyzing' ? (
                   <div className="w-full bg-slate-50 rounded-2xl p-6 border border-[#DC143C] shadow-lg shadow-blue-50/50">
                      <div className="flex items-center justify-between mb-3">

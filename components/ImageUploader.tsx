@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2, AlertCircle } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
@@ -92,12 +92,31 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   // Voice State
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const notesValueRef = useRef(notesValue); // Ref to track current notes value for event listeners
+  const baseNotesRef = useRef(""); // Ref to store notes at start of recording session
+
+  // Update ref when prop changes
+  useEffect(() => {
+    notesValueRef.current = notesValue;
+  }, [notesValue]);
+
+  // Check Speech Support on Mount
+  useEffect(() => {
+    if ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) {
+      setIsSpeechSupported(true);
+    }
+  }, []);
 
   // Clean up camera stream when component unmounts
   useEffect(() => {
     return () => {
       stopCamera();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch(e) {}
+      }
     };
   }, []);
 
@@ -386,11 +405,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     });
   };
 
-  const handleResetZoom = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    resetZoom();
-  };
-
   const handleMouseDown = (e: React.MouseEvent) => {
     if (scale > 1) {
       e.preventDefault();
@@ -441,57 +455,102 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   };
 
   // Voice Note Logic
-  const toggleRecording = () => {
-    if (isRecording) {
-        recognitionRef.current?.stop();
-        setIsRecording(false);
+  const startRecording = () => {
+    setVoiceError(null);
+    
+    // Check support
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        setVoiceError("Voice recognition not supported in this browser.");
         return;
     }
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Voice recognition is not supported in this browser. Please try using Chrome, Safari, or Edge.");
-        return;
+    // Abort existing recording if needed to prevent conflict
+    if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch(e) { console.warn(e); }
+        recognitionRef.current = null;
     }
 
     try {
         const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
+        recognition.continuous = true;
+        recognition.interimResults = true;
         recognition.lang = 'en-US';
+
+        // Snapshot current text base
+        baseNotesRef.current = notesValue || "";
 
         recognition.onstart = () => {
             setIsRecording(true);
+            setVoiceError(null);
         };
 
         recognition.onresult = (event: any) => {
-            const transcript = event.results[0][0].transcript;
-            const newNotes = notesValue ? `${notesValue} ${transcript}` : transcript;
-            onNotesChange?.(newNotes);
+            // Reconstruct full session transcript from the event results
+            // 'continuous' mode accumulates results in the list
+            let sessionTranscript = '';
+            for (let i = 0; i < event.results.length; ++i) {
+                sessionTranscript += event.results[i][0].transcript;
+            }
+            
+            // Append to the base snapshot
+            const currentBase = baseNotesRef.current;
+            // Add a space if the base text is not empty and doesn't end in whitespace
+            const separator = (currentBase && !/\s$/.test(currentBase)) ? ' ' : '';
+            
+            const newText = currentBase + separator + sessionTranscript;
+            
+            // Only update if changed
+            if (newText !== notesValueRef.current) {
+                onNotesChange?.(newText);
+            }
         };
 
         recognition.onerror = (event: any) => {
-            console.error("Speech recognition error", event.error);
-            if (event.error === 'not-allowed') {
-                alert("Microphone access denied. Please allow microphone usage in your browser settings to record voice notes.");
+            console.error("Speech recognition error:", event.error);
+            if (event.error === 'not-allowed' || event.error === 'permission-denied') {
+                setVoiceError("Microphone access denied. Please allow permissions.");
+                setIsRecording(false);
             } else if (event.error === 'no-speech') {
-                // Just stop recording, no alert needed
+                // Ignore silent timeouts, keep listening
+            } else if (event.error === 'aborted') {
+                setIsRecording(false);
             } else {
-                alert(`Voice recording error: ${event.error}`);
+                setVoiceError(`Error: ${event.error}`);
+                setIsRecording(false);
             }
-            setIsRecording(false);
         };
 
         recognition.onend = () => {
-            setIsRecording(false);
+             // If we stopped naturally, clear flag. 
+             // Note: in continuous mode, it might stop on silence timeouts in some browsers.
+             setIsRecording(false);
+             recognitionRef.current = null;
         };
 
         recognitionRef.current = recognition;
         recognition.start();
     } catch (e) {
         console.error("Failed to start speech recognition", e);
-        alert("Could not start voice recording.");
+        setVoiceError("Could not start microphone.");
         setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+        try {
+            recognitionRef.current.stop();
+        } catch (e) { console.error(e); }
+        setIsRecording(false);
+    }
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        startRecording();
     }
   };
 
@@ -501,56 +560,65 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   const handleClearNotes = () => {
       onNotesChange?.("");
+      baseNotesRef.current = "";
+      setVoiceError(null);
+      // If recording, stop it to reset context
+      if (isRecording) {
+        stopRecording();
+      }
   };
 
   const handleReRecord = () => {
       handleClearNotes();
-      // Short delay to clear state before starting recording
+      // Restart recording after a brief tick to allow state to settle
       setTimeout(() => {
-          toggleRecording();
+          startRecording();
       }, 100);
   };
 
   const renderNotesSection = () => (
-    <div className={`mt-6 mb-2 relative z-20 animate-in fade-in slide-in-from-bottom-4 transition-all duration-300 ${notesValue ? 'bg-emerald-50/50' : ''} rounded-xl p-2`}>
+    <div className={`mt-6 mb-2 relative z-20 transition-all duration-300 ${notesValue ? 'bg-emerald-50/50' : ''} rounded-xl p-2`}>
         <div className="flex items-center justify-between mb-2 px-1">
             <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                 <Mic className="w-4 h-4 text-blue-600" />
                 Patient Notes
-                {notesValue && (
+                {notesValue && !isRecording && (
                     <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3" /> Ready
                     </span>
                 )}
+                {isRecording && (
+                     <span className="flex items-center gap-1.5 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full animate-pulse border border-red-200">
+                        <span className="w-2 h-2 bg-red-500 rounded-full"></span> Listening...
+                     </span>
+                )}
             </label>
         </div>
         
+        {voiceError && (
+             <div className="mb-2 px-3 py-2 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100 flex items-center gap-2">
+                <AlertCircle className="w-3 h-3" /> {voiceError}
+             </div>
+        )}
+
         <div className="relative group">
             <textarea
                 value={notesValue}
                 onChange={handleNotesChangeLocal}
-                placeholder="Describe symptoms (itching, bleeding, changing size)..."
+                disabled={isRecording} 
+                placeholder={isRecording ? "Listening..." : "Describe symptoms (itching, bleeding, changing size)..."}
                 className={`w-full p-4 pr-12 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y shadow-sm transition-all outline-none ${
-                    notesValue 
-                    ? 'border-2 border-emerald-400 bg-white text-slate-800' 
-                    : 'border border-slate-300 bg-white text-slate-600'
+                    isRecording 
+                      ? 'border-2 border-red-400 ring-2 ring-red-100 bg-red-50 text-slate-800'
+                      : notesValue 
+                        ? 'border-2 border-emerald-400 bg-white text-slate-800' 
+                        : 'border border-slate-300 bg-white text-slate-600'
                 }`}
             />
             
-            {/* Recording Pulse Overlay */}
-            {isRecording && (
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center z-10 border-2 border-red-400">
-                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2 animate-pulse">
-                        <Mic className="w-6 h-6 text-red-500" />
-                    </div>
-                    <span className="text-sm font-bold text-red-500">Listening...</span>
-                    <button type="button" onClick={toggleRecording} className="mt-2 text-xs bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600">Stop</button>
-                </div>
-            )}
-            
             {/* Controls */}
             <div className="absolute bottom-3 right-3 flex gap-2">
-                {notesValue && (
+                {notesValue && !isRecording && (
                     <>
                         <button
                             type="button"
@@ -570,24 +638,35 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                         </button>
                     </>
                 )}
-                {!isRecording && (
+                
+                {isSpeechSupported ? (
                     <button
                         type="button"
                         onClick={toggleRecording}
-                        className={`p-2 rounded-lg transition-all shadow-sm border ${
-                            notesValue
-                            ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+                        className={`p-2 rounded-lg transition-all shadow-sm border flex items-center gap-2 ${
+                            isRecording
+                            ? 'bg-red-500 text-white border-red-600 hover:bg-red-600 animate-pulse'
                             : 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
                         }`}
-                        title="Start Voice Recording"
+                        title={isRecording ? "Stop Recording" : "Start Voice Recording"}
                     >
-                        <Mic className="w-5 h-5" />
+                        {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                        {isRecording && <span className="text-xs font-bold pr-1">Stop</span>}
+                    </button>
+                ) : (
+                    <button 
+                        type="button" 
+                        className="p-2 rounded-lg bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200" 
+                        title="Voice recognition not supported"
+                        disabled
+                    >
+                        <MicOff className="w-5 h-5" />
                     </button>
                 )}
             </div>
         </div>
         
-        {notesValue && (
+        {notesValue && !isRecording && (
             <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1.5 font-medium px-1">
                 <Check className="w-3 h-3" /> Notes will be included in the analysis.
             </p>
@@ -669,7 +748,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
             </>
           )}
         </div>
-        {/* Notes Section - Rendered outside the overflow-hidden image card */}
+        {/* Notes Section - Rendered outside the overflow-hidden image card, ensuring it takes up space in flow */}
         {renderNotesSection()}
       </div>
     );
