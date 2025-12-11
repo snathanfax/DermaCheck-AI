@@ -7,7 +7,7 @@ import { TrendAnalysis } from './components/TrendAnalysis';
 import { analyzeImage } from './services/geminiService';
 import { storageService } from './services/storageService';
 import { AnalysisResult, MoleProfile } from './types';
-import { ListChecks, Loader2, Stethoscope, Microscope, Activity, Settings, X, CheckCircle, RotateCcw, TrendingUp, Volume2, StopCircle } from 'lucide-react';
+import { ListChecks, Loader2, Stethoscope, Microscope, Activity, Settings, X, CheckCircle, RotateCcw, TrendingUp, Volume2, StopCircle, LogOut } from 'lucide-react';
 
 const App: React.FC = () => {
   const [image, setImage] = useState<{ base64: string; mimeType: string } | null>(null);
@@ -111,6 +111,23 @@ const App: React.FC = () => {
     setPatientNotes("");
     // We do NOT clear selectedMoleId here so users can rapidly scan the same mole if needed,
     // or they can change it manually in the selector.
+  };
+
+  const handleExit = () => {
+    // Reset everything to default state
+    setImage(null);
+    setResult(null);
+    setError(null);
+    setPatientNotes("");
+    setSelectedMoleId(undefined);
+    setActiveMoleProfile(null);
+    setShowTrends(false);
+    
+    // Stop any audio/speech
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   };
 
   const openTrends = () => {
@@ -318,13 +335,26 @@ const App: React.FC = () => {
               image={image} 
               patientNotes={patientNotes}
             />
-            <div className="flex justify-center pt-8 pb-4">
-               <button 
-                  onClick={handleClear}
-                  className="flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-lg font-medium shadow-md hover:bg-slate-700 transition-all hover:scale-105"
-               >
-                 <RotateCcw className="w-4 h-4" /> Start New Assessment
-               </button>
+            
+            <div className="flex flex-col items-center justify-center pt-8 pb-4 space-y-3">
+               <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                 <button 
+                    onClick={handleClear}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-lg font-medium shadow-md hover:bg-slate-700 transition-all hover:scale-105"
+                 >
+                   <RotateCcw className="w-4 h-4" /> Start New Assessment
+                 </button>
+                 
+                 <button 
+                    onClick={handleExit}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-white text-slate-700 border border-slate-300 rounded-lg font-medium shadow-sm hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-all hover:scale-105"
+                 >
+                   <LogOut className="w-4 h-4" /> Exit Application
+                 </button>
+               </div>
+               <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                 <CheckCircle className="w-3 h-3 text-green-500" /> Report saved to history automatically
+               </p>
             </div>
           </div>
         )}
