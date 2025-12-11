@@ -20,29 +20,34 @@ interface ABCDEItem {
 // Educational context for ABCDE
 const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknown: string }> = {
   'Asymmetry': {
-    benign: "Symmetry is a reassuring sign. Benign moles generally grow evenly in all directions, meaning if you folded it in half, the two sides would likely match.",
-    suspicious: "Asymmetry is a key warning sign. Unlike normal moles, melanoma often grows unevenly. Look for one half of the lesion having a different shape or size than the other.",
-    unknown: "Could not be determined. Please ensure the photo is taken directly from above, not at an angle."
+    benign: "Symmetry is a reassuring sign. Benign moles generally grow evenly in all directions, meaning if you folded it in half, the two halves would likely match perfectly in shape and size.",
+    suspicious: "Asymmetry is a key warning sign. Unlike normal moles, melanoma often grows unevenly. Look for one half of the lesion having a significantly different shape, size, or outline than the other. This suggests unregulated cell growth.",
+    unknown: "Could not be determined. Please ensure the photo is taken directly from above, not at an angle, to properly assess symmetry."
   },
   'Border': {
-    benign: "Benign moles typically have a smooth, well-defined border that clearly separates the mole from the surrounding skin.",
-    suspicious: "Irregular borders are a hallmark of malignancy. Cancerous cells often spread unevenly, creating edges that look ragged, notched, blurred, or poorly defined.",
-    unknown: "Edges unclear. Poor focus, low contrast, or hair obstructing the view can make borders hard to evaluate."
+    benign: "Benign moles typically have a smooth, well-defined, and even border that clearly separates the mole from the surrounding skin. It should look like a distinct spot drawn with a fine marker.",
+    suspicious: "Irregular borders are a hallmark of malignancy. Cancerous cells often spread unevenly into surrounding tissue, creating edges that look ragged, notched, blurred, or poorly defined (like a map of a coastline).",
+    unknown: "Edges unclear. Poor focus, low contrast, or hair obstructing the view can make the borders impossible to accurately evaluate."
   },
   'Color': {
-    benign: "Uniformity is good. Harmless moles are usually a single, solid shade of brown or tan throughout the entire lesion.",
-    suspicious: "Color variation is a major red flag. Melanomas often display a chaotic mix of colors, including different shades of tan, brown, black, or even red, white, or blue.",
-    unknown: "Lighting conditions (shadows, glare, flash) may be distorting the true color. Try natural, even lighting."
+    benign: "Uniformity is good. Harmless moles are usually a single, solid shade of brown or tan throughout the entire lesion. Consistent pigmentation suggests stability.",
+    suspicious: "Color variation is a major red flag. Melanomas often display a chaotic mix of colors, including different shades of tan, brown, black, or even red, white, or blue within a single lesion. This mottling indicates different pigment depths.",
+    unknown: "Lighting conditions (shadows, glare, flash) may be distorting the true color. Try natural, even lighting for accurate color assessment."
   },
   'Diameter': {
     benign: "Most benign moles are smaller than 6mm (about the size of a pencil eraser) and tend to stay a stable size over time.",
     suspicious: "Lesions larger than a pencil eraser (6mm) are concerning, though melanomas can be smaller when they start. Rapid growth is a more specific danger sign than size alone.",
-    unknown: "No scale reference available. It's hard to judge size from a photo without a reference object (like a coin)."
+    unknown: "No scale reference available. It's hard to judge size from a photo without a reference object (like a coin) placed nearby."
   },
   'Evolving': {
     benign: "Stability is key. Benign moles typically look the same over months and years. A lack of change is a strong indicator of a harmless lesion.",
-    suspicious: "Evolution is the most critical factor. Any mole that is changing in size, shape, color, elevation, or starts bleeding, itching, or crusting requires immediate medical attention.",
+    suspicious: "Evolution is the most critical factor. Any mole that is changing in size, shape, color, elevation, or starts bleeding, itching, or crusting requires immediate medical attention. Change indicates active growth.",
     unknown: "Cannot be determined from a single photo. Evolution requires monitoring changes over time or comparison with past photos."
+  },
+  'Moles': {
+    benign: "Common moles (nevi) are typically small, round, and uniform. They are a normal accumulation of pigment cells and usually remain stable throughout adulthood.",
+    suspicious: "Atypical moles (dysplastic nevi) often look different from your other moles (the 'Ugly Duckling' sign). While not always cancerous, a mole that stands out or looks unusual compared to your peers carries a higher risk.",
+    unknown: "General classification unclear. The lesion does not clearly fit standard categories based on this image alone and may require professional dermatoscopy."
   }
 };
 
