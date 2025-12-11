@@ -450,36 +450,49 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        alert("Voice recognition is not supported in this browser.");
+        alert("Voice recognition is not supported in this browser. Please try using Chrome, Safari, or Edge.");
         return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+    try {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
 
-    recognition.onstart = () => {
-        setIsRecording(true);
-    };
+        recognition.onstart = () => {
+            setIsRecording(true);
+        };
 
-    recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        const newNotes = notesValue ? `${notesValue} ${transcript}` : transcript;
-        onNotesChange?.(newNotes);
-    };
+        recognition.onresult = (event: any) => {
+            const transcript = event.results[0][0].transcript;
+            const newNotes = notesValue ? `${notesValue} ${transcript}` : transcript;
+            onNotesChange?.(newNotes);
+        };
 
-    recognition.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
+        recognition.onerror = (event: any) => {
+            console.error("Speech recognition error", event.error);
+            if (event.error === 'not-allowed') {
+                alert("Microphone access denied. Please allow microphone usage in your browser settings to record voice notes.");
+            } else if (event.error === 'no-speech') {
+                // Just stop recording, no alert needed
+            } else {
+                alert(`Voice recording error: ${event.error}`);
+            }
+            setIsRecording(false);
+        };
+
+        recognition.onend = () => {
+            setIsRecording(false);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+    } catch (e) {
+        console.error("Failed to start speech recognition", e);
+        alert("Could not start voice recording.");
         setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-        setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    }
   };
 
   const handleNotesChangeLocal = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -531,7 +544,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                         <Mic className="w-6 h-6 text-red-500" />
                     </div>
                     <span className="text-sm font-bold text-red-500">Listening...</span>
-                    <button onClick={toggleRecording} className="mt-2 text-xs bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600">Stop</button>
+                    <button type="button" onClick={toggleRecording} className="mt-2 text-xs bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600">Stop</button>
                 </div>
             )}
             
@@ -540,6 +553,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 {notesValue && (
                     <>
                         <button
+                            type="button"
                             onClick={handleClearNotes}
                             className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors shadow-sm border border-slate-200"
                             title="Delete Notes"
@@ -547,6 +561,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                             <Trash2 className="w-4 h-4" />
                         </button>
                         <button
+                            type="button"
                             onClick={handleReRecord}
                             className="flex items-center gap-1 px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shadow-sm border border-blue-200 text-xs font-bold"
                             title="Clear and Record New"
@@ -557,6 +572,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 )}
                 {!isRecording && (
                     <button
+                        type="button"
                         onClick={toggleRecording}
                         className={`p-2 rounded-lg transition-all shadow-sm border ${
                             notesValue
@@ -601,15 +617,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                 {/* Aspect Ratio Controls */}
                 <div className="absolute bottom-16 left-0 right-0 z-50 flex items-center justify-center gap-2 pointer-events-none">
                   <div className="flex bg-black/60 backdrop-blur-md rounded-full p-1 border border-white/10 pointer-events-auto">
-                      <button onClick={() => setAspect(undefined)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === undefined ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>Free</button>
-                      <button onClick={() => setAspect(1)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 1 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>1:1</button>
-                      <button onClick={() => setAspect(4/3)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 4/3 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>4:3</button>
+                      <button type="button" onClick={() => setAspect(undefined)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === undefined ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>Free</button>
+                      <button type="button" onClick={() => setAspect(1)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 1 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>1:1</button>
+                      <button type="button" onClick={() => setAspect(4/3)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 4/3 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>4:3</button>
                   </div>
                 </div>
 
                 <div className="absolute bottom-4 left-0 right-0 z-50 flex items-center justify-center gap-4">
-                  <button onClick={() => setIsCropping(false)} className="flex items-center gap-2 px-4 py-2 bg-[#DC143C]/90 text-white rounded-full shadow-lg hover:bg-[#DC143C] transition-colors backdrop-blur-sm text-sm font-medium"><X className="w-4 h-4" /> Cancel</button>
-                  <button onClick={performCrop} className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm text-sm font-medium"><Check className="w-4 h-4" /> Apply</button>
+                  <button type="button" onClick={() => setIsCropping(false)} className="flex items-center gap-2 px-4 py-2 bg-[#DC143C]/90 text-white rounded-full shadow-lg hover:bg-[#DC143C] transition-colors backdrop-blur-sm text-sm font-medium"><X className="w-4 h-4" /> Cancel</button>
+                  <button type="button" onClick={performCrop} className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm text-sm font-medium"><Check className="w-4 h-4" /> Apply</button>
                 </div>
             </div>
           ) : (
@@ -617,9 +633,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
               {/* Zoom Controls Overlay */}
               {!isAnalyzing && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center gap-2 bg-slate-900/70 backdrop-blur-md p-1.5 rounded-full border border-slate-700 shadow-lg transition-opacity duration-200">
-                      <button onClick={handleZoomOut} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={scale <= 1} title="Zoom Out"><ZoomOut className="w-4 h-4" /></button>
+                      <button type="button" onClick={handleZoomOut} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={scale <= 1} title="Zoom Out"><ZoomOut className="w-4 h-4" /></button>
                       <span className="text-xs font-medium text-white min-w-[32px] text-center font-mono">{Math.round(scale * 100)}%</span>
-                      <button onClick={handleZoomIn} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={scale >= 4} title="Zoom In"><ZoomIn className="w-4 h-4" /></button>
+                      <button type="button" onClick={handleZoomIn} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={scale >= 4} title="Zoom In"><ZoomIn className="w-4 h-4" /></button>
                   </div>
               )}
 
@@ -644,10 +660,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
               {!isAnalyzing && (
               <>
                   <div className="absolute top-4 left-4 z-20 flex flex-col gap-3">
-                      <button onClick={toggleEnhance} className={`p-2 rounded-full shadow-lg transition-all transform hover:scale-105 ${isEnhanced ? 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-white/50' : 'bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white'}`} title={isEnhanced ? "Revert to Original" : "Auto-Enhance Image"}><Wand2 className="w-4 h-4" /></button>
-                      <button onClick={() => { setIsCropping(true); setCrop({ x: 0, y: 0 }); setCropZoom(1); setAspect(undefined); }} className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Crop Image"><Scissors className="w-4 h-4" /></button>
+                      <button type="button" onClick={toggleEnhance} className={`p-2 rounded-full shadow-lg transition-all transform hover:scale-105 ${isEnhanced ? 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-white/50' : 'bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white'}`} title={isEnhanced ? "Revert to Original" : "Auto-Enhance Image"}><Wand2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => { setIsCropping(true); setCrop({ x: 0, y: 0 }); setCropZoom(1); setAspect(undefined); }} className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Crop Image"><Scissors className="w-4 h-4" /></button>
                   </div>
-                  <button onClick={clearImage} className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Clear Image"><X className="w-4 h-4" /></button>
+                  <button type="button" onClick={clearImage} className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Clear Image"><X className="w-4 h-4" /></button>
               </>
               )}
             </>
@@ -667,21 +683,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           
           <div className="absolute top-0 left-0 right-0 p-4 flex items-start justify-between z-20 bg-gradient-to-b from-black/60 to-transparent">
             <div className="relative">
-                <button onClick={() => setShowResMenu(!showResMenu)} className="flex items-center gap-1.5 text-xs font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 hover:bg-black/60 transition-colors"><Monitor className="w-3 h-3" /> {resolution}</button>
+                <button type="button" onClick={() => setShowResMenu(!showResMenu)} className="flex items-center gap-1.5 text-xs font-bold text-white bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 hover:bg-black/60 transition-colors"><Monitor className="w-3 h-3" /> {resolution}</button>
                 {showResMenu && (
                     <div className="absolute top-full left-0 mt-2 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden flex flex-col shadow-xl animate-in fade-in zoom-in-95 duration-150">
                       {(['HD', 'FHD', '4K'] as const).map(res => (
-                          <button key={res} onClick={() => { setResolution(res); setShowResMenu(false); }} className={`px-4 py-2 text-xs text-left hover:bg-white/20 transition-colors ${resolution === res ? 'text-blue-400 font-bold' : 'text-white'}`}>{res}</button>
+                          <button key={res} type="button" onClick={() => { setResolution(res); setShowResMenu(false); }} className={`px-4 py-2 text-xs text-left hover:bg-white/20 transition-colors ${resolution === res ? 'text-blue-400 font-bold' : 'text-white'}`}>{res}</button>
                       ))}
                     </div>
                 )}
             </div>
             <div className="flex gap-4">
                 {capabilities?.torch && (
-                    <button onClick={toggleTorch} className={`p-2 rounded-full transition-colors backdrop-blur-md ${torch ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-black/40 text-white hover:bg-black/60'}`} title={torch ? "Turn Flash Off" : "Turn Flash On"}>{torch ? <Zap className="w-5 h-5 fill-black" /> : <ZapOff className="w-5 h-5" />}</button>
+                    <button type="button" onClick={toggleTorch} className={`p-2 rounded-full transition-colors backdrop-blur-md ${torch ? 'bg-yellow-400 text-black shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-black/40 text-white hover:bg-black/60'}`} title={torch ? "Turn Flash Off" : "Turn Flash On"}>{torch ? <Zap className="w-5 h-5 fill-black" /> : <ZapOff className="w-5 h-5" />}</button>
                 )}
-                <button onClick={resetCameraSettings} className="bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors backdrop-blur-md" title="Reset Settings (Zoom, Flash, Resolution)"><RefreshCw className="w-5 h-5" /></button>
-                <button onClick={stopCamera} className="bg-black/40 text-white p-2 rounded-full hover:bg-red-500/80 transition-colors backdrop-blur-md" title="Close Camera"><X className="w-5 h-5" /></button>
+                <button type="button" onClick={resetCameraSettings} className="bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors backdrop-blur-md" title="Reset Settings (Zoom, Flash, Resolution)"><RefreshCw className="w-5 h-5" /></button>
+                <button type="button" onClick={stopCamera} className="bg-black/40 text-white p-2 rounded-full hover:bg-red-500/80 transition-colors backdrop-blur-md" title="Close Camera"><X className="w-5 h-5" /></button>
             </div>
           </div>
 
@@ -693,7 +709,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                     <span className="text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">{Math.round(zoom * 10) / 10}x</span>
                 </div>
             )}
-            <button onClick={handleCapture} className="group relative" aria-label="Capture photo">
+            <button type="button" onClick={handleCapture} className="group relative" aria-label="Capture photo">
               <div className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center transition-transform transform group-active:scale-95 shadow-lg">
                 <div className="w-14 h-14 bg-white rounded-full border-2 border-slate-300 group-hover:bg-slate-100 transition-colors"></div>
               </div>
@@ -735,7 +751,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           <div className="flex-grow border-t border-slate-200"></div>
       </div>
 
-      <button onClick={() => setIsCameraOpen(true)} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border border-slate-300 text-slate-700 rounded-xl font-medium shadow-sm hover:bg-slate-50 hover:border-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+      <button type="button" onClick={() => setIsCameraOpen(true)} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border border-slate-300 text-slate-700 rounded-xl font-medium shadow-sm hover:bg-slate-50 hover:border-slate-400 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
         <Camera className="w-5 h-5" /> Take Photo
       </button>
 
