@@ -660,8 +660,8 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                             {/* Tooltip Icon */}
                             <div className="relative group/tooltip">
                                 <HelpCircle className="w-3 h-3 text-violet-400 cursor-help" />
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
-                                    The system infers classification by extracting high-dimensional feature vectors (texture, color, structure) and comparing them against statistical centroids of the 10,000 HAM10000 training images.
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
+                                    The system infers classification by extracting high-dimensional feature vectors—specifically analyzing <strong>texture patterns</strong>, <strong>color distribution</strong>, and <strong>boundary characteristics</strong>—and comparing them against the statistical centroids of the 10,000 HAM10000 training images.
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                                 </div>
                             </div>
