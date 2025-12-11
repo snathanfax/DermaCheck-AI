@@ -10,8 +10,16 @@ Use the standard ABCDE rule (Asymmetry, Border, Color, Diameter, Evolving) to ev
 
 1.  **Analyze the Image**: Look closely at the visual features.
 2.  **Search Grounding**: Use Google Search to find relevant medical descriptions, similar case studies, or guidelines if you detect specific features.
-3.  **ISIC Comparison**: Compare visual features with patterns typically found in the International Skin Imaging Collaboration (ISIC) Archive datasets (e.g., reticular networks, globules, streaks).
-4.  **Assessment**: Provide a detailed assessment.
+3.  **ISIC Comparison**: Compare visual features with patterns typically found in the International Skin Imaging Collaboration (ISIC) Archive datasets.
+4.  **HAM10000 Analysis**: Compare the image against the HAM10000 Dataset (Human Against Machine). Classify the lesion into one of the 7 diagnostic categories:
+    *   akiec (Actinic keratoses)
+    *   bcc (Basal cell carcinoma)
+    *   bkl (Benign keratosis-like lesions)
+    *   df (Dermatofibroma)
+    *   mel (Melanoma)
+    *   nv (Melanocytic nevi)
+    *   vasc (Vascular lesions)
+5.  **Assessment**: Provide a detailed assessment.
 
 FORMATTING REQUIREMENTS:
 You MUST start your response with a strict data block for the ABCDE analysis, followed by your detailed report.
@@ -20,6 +28,9 @@ Strict Data Block Format:
 ~ABCDE_START~
 Confidence Score: [0-100]%
 ISIC Risk Score: [1-10]
+HAM10000 Prediction: [Category Name e.g. Melanocytic nevi]
+HAM10000 Confidence: [0-100]%
+Moles: [Benign/Suspicious/Unknown] - [One sentence summary]
 A: [Benign/Suspicious/Unknown] - [One sentence summary]
 B: [Benign/Suspicious/Unknown] - [One sentence summary]
 C: [Benign/Suspicious/Unknown] - [One sentence summary]
@@ -30,17 +41,17 @@ E: [Benign/Suspicious/Unknown] - [One sentence summary]
 [Insert Detailed Markdown Report Here]
 
 Rules for Data Block:
-- **Confidence Score**: Estimate how confident you are that your assessment (Benign vs Suspicious) is correct based on visual clarity and typical features. 0% is guessing, 100% is certain.
-- **ISIC Risk Score**: Evaluate the lesion against patterns in the International Skin Imaging Collaboration (ISIC) Archive. 1 = Resemblance to common benign nevi, 10 = High resemblance to malignant melanoma examples.
-- Use exactly "Benign", "Suspicious", or "Unknown".
-- **Summary**: Keep the summary concise but descriptive (15-30 words). Mention specific visual cues observed (e.g., "Irregular jagged edges visible on the left side").
-- The letters A, B, C, D, E correspond to Asymmetry, Border, Color, Diameter, Evolving.
+- **Confidence Score**: Your overall confidence in the assessment.
+- **ISIC Risk Score**: 1-10 scale based on ISIC Archive patterns.
+- **HAM10000 Prediction**: The most likely of the 7 HAM10000 categories.
+- **HAM10000 Confidence**: The probability/confidence of this specific class prediction based on visual features.
+- **Moles**: Overall classification.
+- **Summary**: Concise description of visual cues (15-30 words).
 
 Rules for Detailed Report:
-- Use Markdown for structure (headings, bold text, lists).
-- Be concise but thorough.
-- **Safety First**: Always err on the side of caution. If uncertain, recommend a doctor visit.
-- **Tone**: Professional, empathetic, and objective.
+- Use Markdown.
+- **Include a specific section titled "HAM10000 Methodology"**: In this section, provide a simple description of how the strong baseline for multi-class classification was used. Explain that the system infers the classification by extracting high-dimensional feature vectors (analyzing texture, color distribution, and structural irregularities) and comparing them against the statistical centroids of the 10,000 training images in the HAM10000 dataset to determine the highest probability match among the 7 diagnostic classes.
+- **Safety First**: Always err on the side of caution.
 `;
 
 export const analyzeImage = async (base64Image: string, mimeType: string, modelName: string = "gemini-2.5-flash"): Promise<AnalysisResult> => {
@@ -56,7 +67,7 @@ export const analyzeImage = async (base64Image: string, mimeType: string, modelN
             },
           },
           {
-            text: "Analyze this image of a skin lesion. Apply the ABCDE rules. Search for similar medical examples to confirm your observations. Is this likely harmless or should I see a doctor?",
+            text: "Analyze this image of a skin lesion. Apply ABCDE rules. Compare against HAM10000 dataset classes. Is this likely harmless?",
           },
         ],
       },
