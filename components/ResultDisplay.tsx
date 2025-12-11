@@ -719,19 +719,19 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                                     <div className="mb-2">
                                         <strong className="block text-sky-200 mb-0.5">Major Criteria (2 points each):</strong>
                                         <ul className="list-disc pl-3 space-y-1 text-slate-300">
-                                            <li><span className="text-white">Change in Size:</span> Accelerated growth indicates instability.</li>
-                                            <li><span className="text-white">Irregular Shape:</span> Asymmetry suggests uneven cell division.</li>
-                                            <li><span className="text-white">Irregular Color:</span> Varied pigmentation depths.</li>
+                                            <li><span className="text-white">Change in Size:</span> Rapid enlargement is a major predictor of malignancy.</li>
+                                            <li><span className="text-white">Irregular Shape:</span> Non-uniform borders suggest uncontrolled, asymmetrical growth.</li>
+                                            <li><span className="text-white">Irregular Color:</span> Multiple shades (black, brown, red) indicate chaotic pigmentation.</li>
                                         </ul>
                                     </div>
 
                                     <div>
                                         <strong className="block text-sky-200 mb-0.5">Minor Criteria (1 point each):</strong>
                                         <ul className="list-disc pl-3 space-y-1 text-slate-300">
-                                            <li><span className="text-white">Diameter &ge; 7mm:</span> Larger lesions carry higher risk.</li>
-                                            <li><span className="text-white">Inflammation:</span> Redness/swelling (immune response).</li>
-                                            <li><span className="text-white">Oozing/Crusting:</span> Tissue breakdown sign.</li>
-                                            <li><span className="text-white">Sensation Change:</span> Itch or pain can signal activity.</li>
+                                            <li><span className="text-white">Diameter &ge; 7mm:</span> Larger lesions (>7mm) have a higher statistical probability of being malignant.</li>
+                                            <li><span className="text-white">Inflammation:</span> Redness (erythema) suggests an immune reaction to the lesion.</li>
+                                            <li><span className="text-white">Oozing/Crusting:</span> Spontaneous bleeding or crusting indicates tissue ulceration.</li>
+                                            <li><span className="text-white">Sensation Change:</span> Persistent itching or altered sensation often accompanies active growth.</li>
                                         </ul>
                                     </div>
                                     
