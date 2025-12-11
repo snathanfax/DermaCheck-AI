@@ -427,20 +427,22 @@ const App: React.FC = () => {
                 DermaCheck AI
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
                <button
                   onClick={() => setShowAbout(true)}
-                  className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                  title="About"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  title="About DermaCheck AI"
                >
                   <HelpCircle className="w-5 h-5" />
+                  <span className="hidden sm:inline">About</span>
                </button>
                <button
                   onClick={() => setShowSettings(true)}
-                  className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   title="Settings"
                >
                   <Settings className="w-5 h-5" />
+                  <span className="hidden sm:inline">Settings</span>
                </button>
                {history.length > 0 && (
                   <button 
@@ -448,12 +450,13 @@ const App: React.FC = () => {
                         const el = document.getElementById('history-section');
                         el?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="hidden sm:flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors"
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   >
-                    <History className="w-4 h-4" /> History
+                    <History className="w-5 h-5" /> 
+                    <span>History</span>
                   </button>
                )}
-              <div className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+              <div className="text-xs font-medium text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 ml-1">
                 {selectedModel === 'gemini-2.5-flash' ? 'Flash' : selectedModel.includes('pro') ? 'Pro' : 'Lite'}
               </div>
             </div>
