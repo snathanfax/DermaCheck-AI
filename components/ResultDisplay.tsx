@@ -468,13 +468,34 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                 doc.setTextColor(100);
                 doc.text("ISIC RISK SCORE:", textX, isicY);
                 
+                const scoreNum = parseInt(isicScore) || 0;
+                // Set color based on risk
+                if (scoreNum <= 3) doc.setTextColor(22, 163, 74); // Green
+                else if (scoreNum <= 6) doc.setTextColor(202, 138, 4); // Yellow-Dark
+                else doc.setTextColor(220, 38, 38); // Red
+                
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(14);
-                doc.setTextColor(30, 64, 175);
                 doc.text(`${isicScore}/10`, textX, isicY + 8);
+
+                // ISIC Bar
+                const barWidth = 60;
+                const barHeight = 4;
+                const barY = isicY + 12;
+                
+                // Background
+                doc.setFillColor(226, 232, 240);
+                doc.rect(textX, barY, barWidth, barHeight, 'F');
+                
+                // Fill
+                if (scoreNum <= 3) doc.setFillColor(22, 163, 74);
+                else if (scoreNum <= 6) doc.setFillColor(202, 138, 4);
+                else doc.setFillColor(220, 38, 38);
+                
+                doc.rect(textX, barY, (barWidth * scoreNum) / 10, barHeight, 'F');
             }
 
-            imgSectionHeight = Math.max(imgHeight + 15, 60);
+            imgSectionHeight = Math.max(imgHeight + 15, isicScore !== "N/A" ? 80 : 60);
             yPos += imgSectionHeight;
         } catch (e) {
             console.error("Error adding image to PDF", e);
@@ -525,10 +546,30 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
              doc.setFontSize(10);
              doc.setTextColor(100);
              doc.text("ISIC RISK SCORE:", margin, isicY);
+             
+             const scoreNum = parseInt(isicScore) || 0;
+             if (scoreNum <= 3) doc.setTextColor(22, 163, 74);
+             else if (scoreNum <= 6) doc.setTextColor(202, 138, 4);
+             else doc.setTextColor(220, 38, 38);
+
              doc.setFontSize(14);
-             doc.setTextColor(30, 64, 175);
              doc.text(`${isicScore}/10`, margin, isicY + 8);
-             yPos += 15;
+
+             // ISIC Bar
+             const barWidth = 100;
+             const barHeight = 4;
+             const barY = isicY + 12;
+             
+             doc.setFillColor(226, 232, 240);
+             doc.rect(margin, barY, barWidth, barHeight, 'F');
+             
+             if (scoreNum <= 3) doc.setFillColor(22, 163, 74);
+             else if (scoreNum <= 6) doc.setFillColor(202, 138, 4);
+             else doc.setFillColor(220, 38, 38);
+             
+             doc.rect(margin, barY, (barWidth * scoreNum) / 10, barHeight, 'F');
+
+             yPos += 25;
          }
          
          yPos += 30;
