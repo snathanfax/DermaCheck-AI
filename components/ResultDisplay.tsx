@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import { AnalysisResult } from '../types';
-import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield, Mic, Microscope, ListChecks } from 'lucide-react';
+import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield, Mic, Microscope, ListChecks, Info } from 'lucide-react';
 import LZString from 'lz-string';
 import { jsPDF } from "jspdf";
 
@@ -18,31 +18,31 @@ interface ABCDEItem {
   summary: string;
 }
 
-// Educational context for ABCDE
+// Enhanced Educational context for ABCDE
 const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknown: string }> = {
   'Asymmetry': {
-    benign: "Symmetry is a reassuring sign. Benign moles generally grow evenly in all directions, meaning if you folded it in half, the two halves would likely match perfectly in shape and size.",
-    suspicious: "Asymmetry is a key warning sign. Unlike normal moles, melanoma often grows unevenly. Look for one half of the lesion having a significantly different shape, size, or outline than the other. This suggests unregulated cell growth.",
+    benign: "Symmetry is a reassuring sign. If you draw a line through the middle, the two halves match in shape and size.",
+    suspicious: "Asymmetry is a warning sign. If you draw a line through the middle, the two halves do NOT match. This uneven growth pattern is typical of melanoma.",
     unknown: "Could not be determined. Please ensure the photo is taken directly from above, not at an angle, to properly assess symmetry."
   },
   'Border': {
-    benign: "Benign moles typically have a smooth, well-defined, and even border that clearly separates the mole from the surrounding skin. It should look like a distinct spot drawn with a fine marker.",
-    suspicious: "Irregular borders are a hallmark of malignancy. Cancerous cells often spread unevenly into surrounding tissue, creating edges that look ragged, notched, blurred, or poorly defined (like a map of a coastline).",
+    benign: "Benign moles typically have a smooth, consistent, and well-defined border. The transition from the mole to surrounding skin is sharp and clear.",
+    suspicious: "Cancerous lesions often have irregular, ragged, notched, or blurred borders. The pigment may appear to leak or fade into the surrounding skin, lacking a clear edge.",
     unknown: "Edges unclear. Poor focus, low contrast, or hair obstructing the view can make the borders impossible to accurately evaluate."
   },
   'Color': {
-    benign: "Uniformity is good. Harmless moles are usually a single, solid shade of brown or tan throughout the entire lesion. Consistent pigmentation suggests stability.",
-    suspicious: "Color variation is a major red flag. Melanomas often display a chaotic mix of colors, including different shades of tan, brown, black, or even red, white, or blue within a single lesion. This mottling indicates different pigment depths.",
+    benign: "Safe moles are usually a single, uniform shade of tan or brown. Homogeneous pigmentation indicates stability.",
+    suspicious: "Color variation is critical. Look for multiple shades of black, brown, tan, white, gray, red, or blue. A mottling of different colors suggests unregulated pigment production.",
     unknown: "Lighting conditions (shadows, glare, flash) may be distorting the true color. Try natural, even lighting for accurate color assessment."
   },
   'Diameter': {
-    benign: "Most benign moles are smaller than 6mm (about the size of a pencil eraser) and tend to stay a stable size over time.",
-    suspicious: "Lesions larger than a pencil eraser (6mm) are concerning, though melanomas can be smaller when they start. Rapid growth is a more specific danger sign than size alone.",
+    benign: "Most benign moles are smaller than 6mm (roughly the size of a pencil eraser). They tend to remain stable in size.",
+    suspicious: "Lesions larger than 6mm are concerning, although melanomas can be smaller in early stages. Any mole that is growing in diameter should be checked.",
     unknown: "No scale reference available. It's hard to judge size from a photo without a reference object (like a coin) placed nearby."
   },
   'Evolving': {
-    benign: "Stability is key. Benign moles typically look the same over months and years. A lack of change is a strong indicator of a harmless lesion.",
-    suspicious: "Evolution is the most critical factor. Any mole that is changing in size, shape, color, elevation, or starts bleeding, itching, or crusting requires immediate medical attention. Change indicates active growth.",
+    benign: "Stability is the hallmark of a benign mole. It looks the same month after month.",
+    suspicious: "Evolution is the most important warning sign. Any change in size, shape, color, elevation, or new symptoms like bleeding, itching, or crusting indicates active progression and risk.",
     unknown: "Cannot be determined from a single photo. Evolution requires monitoring changes over time or comparison with past photos."
   },
   'Moles': {
@@ -82,6 +82,107 @@ const MEDICAL_DEFINITIONS: Record<string, string> = {
   "BKL": "Benign keratosis-like lesions (solar lentigines / seborrheic keratoses).",
   "DF": "Dermatofibroma.",
   "VASC": "Vascular lesions (angiomas, angiokeratomas, pyogenic granulomas)."
+};
+
+// Helper component for ABCDE Visuals
+const ABCDEVisual: React.FC<{ type: string }> = ({ type }) => {
+  const commonClasses = "w-full h-16 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-around px-2 mb-3 overflow-hidden";
+  
+  switch (type) {
+    case 'Asymmetry':
+      return (
+        <div className={commonClasses} title="Comparison: Symmetrical vs Asymmetrical">
+          <div className="flex flex-col items-center gap-1">
+             <svg width="40" height="40" viewBox="0 0 40 40">
+               <circle cx="20" cy="20" r="14" fill="#8B5A2B" />
+               <line x1="20" y1="2" x2="20" y2="38" stroke="white" strokeWidth="1" strokeDasharray="2 2" />
+             </svg>
+             <span className="text-[9px] font-semibold text-green-700">Symmetrical</span>
+          </div>
+          <div className="h-10 w-px bg-slate-300"></div>
+          <div className="flex flex-col items-center gap-1">
+             <svg width="40" height="40" viewBox="0 0 40 40">
+               <path d="M10,20 Q12,5 25,10 T35,25 Q30,35 15,30 T10,20" fill="#5D4037" />
+               <line x1="20" y1="2" x2="20" y2="38" stroke="white" strokeWidth="1" strokeDasharray="2 2" />
+             </svg>
+             <span className="text-[9px] font-semibold text-red-700">Asymmetrical</span>
+          </div>
+        </div>
+      );
+    case 'Border':
+      return (
+        <div className={commonClasses} title="Comparison: Smooth vs Irregular Border">
+          <div className="flex flex-col items-center gap-1">
+             <svg width="40" height="40" viewBox="0 0 40 40">
+               <circle cx="20" cy="20" r="14" fill="#8B5A2B" />
+             </svg>
+             <span className="text-[9px] font-semibold text-green-700">Smooth</span>
+          </div>
+          <div className="h-10 w-px bg-slate-300"></div>
+          <div className="flex flex-col items-center gap-1">
+             <svg width="40" height="40" viewBox="0 0 40 40">
+               {/* Jagged starburst shape */}
+               <path d="M20,6 L23,15 L32,14 L26,20 L30,29 L21,25 L15,32 L14,23 L6,20 L13,14 Z" fill="#5D4037" transform="scale(1.1) translate(-2,-2)" />
+             </svg>
+             <span className="text-[9px] font-semibold text-red-700">Irregular</span>
+          </div>
+        </div>
+      );
+    case 'Color':
+      return (
+        <div className={commonClasses} title="Comparison: Single Color vs Multi-Color">
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-8 h-8 rounded-full bg-[#8B5A2B]"></div>
+             <span className="text-[9px] font-semibold text-green-700">Uniform</span>
+          </div>
+          <div className="h-10 w-px bg-slate-300"></div>
+          <div className="flex flex-col items-center gap-1">
+             <div className="w-8 h-8 rounded-full" style={{ background: 'conic-gradient(from 45deg, #3E2723, #8B5A2B, #000000, #A1887F, #3E2723)' }}></div>
+             <span className="text-[9px] font-semibold text-red-700">Varied</span>
+          </div>
+        </div>
+      );
+    case 'Diameter':
+      return (
+        <div className={commonClasses} title="Comparison: <6mm vs >6mm">
+          <div className="flex flex-col items-center gap-1 relative">
+             <div className="w-3 h-3 rounded-full bg-[#8B5A2B] mb-1"></div>
+             <div className="w-8 h-px bg-slate-400 absolute top-[14px]"></div>
+             <span className="text-[9px] font-semibold text-green-700">&lt; 6mm</span>
+          </div>
+          <div className="h-10 w-px bg-slate-300"></div>
+          <div className="flex flex-col items-center gap-1 relative">
+             <div className="w-6 h-6 rounded-full bg-[#5D4037]"></div>
+             <div className="w-10 h-px bg-slate-400 absolute top-[28px]"></div>
+             <span className="text-[9px] font-semibold text-red-700">&gt; 6mm</span>
+          </div>
+        </div>
+      );
+    case 'Evolving':
+      return (
+        <div className={commonClasses} title="Comparison: Stable vs Changing">
+           <div className="flex flex-col items-center gap-1">
+             <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#8B5A2B]"></div>
+                <div className="text-slate-400 text-[8px]">→</div>
+                <div className="w-2 h-2 rounded-full bg-[#8B5A2B]"></div>
+             </div>
+             <span className="text-[9px] font-semibold text-green-700">Stable</span>
+          </div>
+          <div className="h-10 w-px bg-slate-300"></div>
+          <div className="flex flex-col items-center gap-1">
+             <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-[#8B5A2B]"></div>
+                <div className="text-slate-400 text-[8px]">→</div>
+                <div className="w-4 h-4 rounded-full bg-[#3E2723] border border-red-200"></div>
+             </div>
+             <span className="text-[9px] font-semibold text-red-700">Changing</span>
+          </div>
+        </div>
+      );
+    default:
+      return null;
+  }
 };
 
 // Helper to process text and insert search links for medical terms
@@ -849,11 +950,16 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
         {/* Patient Notes Display */}
         {patientNotes && (
             <div className="px-6 py-4 border-b border-[#DC143C] bg-white">
-                <div className="flex items-start gap-2 text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
-                    <Mic className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                    <div>
-                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Patient Reported History</h4>
-                        <p className="text-sm italic">"{patientNotes}"</p>
+                <div className="flex items-start gap-3 text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <Mic className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide">Patient Reported History</h4>
+                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-200 shadow-sm" title="This information was used by the AI during analysis">
+                                <CheckCircle className="w-3 h-3" /> Integrated in Analysis
+                            </span>
+                        </div>
+                        <p className="text-sm italic text-slate-700 leading-relaxed">"{patientNotes}"</p>
                     </div>
                 </div>
             </div>
@@ -914,6 +1020,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                       </div>
                       {icon}
                     </div>
+                    
+                    {/* Visual Aid */}
+                    <ABCDEVisual type={item.title} />
+
                     <div className="space-y-3">
                        <div className={`text-sm ${isSuspicious ? 'font-medium text-red-700' : 'text-slate-600'}`}>{item.summary}</div>
                        {contextText && (
