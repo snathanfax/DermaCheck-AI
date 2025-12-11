@@ -22,6 +22,7 @@ const App: React.FC = () => {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [showAbcdeInfo, setShowAbcdeInfo] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [uploaderKey, setUploaderKey] = useState(0);
 
   // Load history on mount and check for shared URL
   useEffect(() => {
@@ -172,9 +173,17 @@ const App: React.FC = () => {
   const handleClear = () => {
     setSelectedImage(null);
     setAnalysis({ status: 'idle', result: null, error: null });
+    setUploaderKey(prev => prev + 1); // Force re-mount of ImageUploader to clear internal state
+    
     // Clear shared URL param if exists
     if (window.location.search) {
        window.history.pushState({}, '', window.location.pathname);
+    }
+    
+    // Stop voice if playing
+    if (isSpeaking) {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
     }
   };
 
@@ -307,6 +316,7 @@ const App: React.FC = () => {
                 <h3 className="font-semibold text-slate-800">Upload Photo</h3>
               </div>
               <ImageUploader 
+                key={uploaderKey}
                 onImageSelect={handleImageSelect} 
                 onClear={handleClear} 
                 isAnalyzing={analysis.status === 'analyzing'}

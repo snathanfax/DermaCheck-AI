@@ -259,7 +259,39 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(cleanText);
+    // Construct full text representation including ABCDE summary
+    const parts = [];
+    
+    parts.push("DermaCheck AI Analysis Result");
+    if (confidenceScore !== "N/A") {
+        parts.push(`Confidence Score: ${confidenceScore}`);
+    }
+    parts.push(""); // spacer
+
+    if (abcdeData.length > 0) {
+        parts.push("ABCDE Analysis:");
+        abcdeData.forEach(item => {
+            parts.push(`${item.letter} - ${item.title} [${item.status}]: ${item.summary}`);
+        });
+        parts.push(""); // spacer
+    }
+
+    // Basic markdown stripping for clean text
+    const strippedReport = cleanText
+      .replace(/#{1,6}\s?/g, '') // Headers
+      .replace(/\*\*/g, '')      // Bold
+      .replace(/__/g, '')        // Bold
+      .replace(/\*/g, '')        // Italic/Bulleted
+      .replace(/^\s*[-]\s/gm, '• ') // List items
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Links
+      .trim();
+
+    parts.push("Detailed Assessment:");
+    parts.push(strippedReport);
+    parts.push("\nDisclaimer: This is an AI preliminary analysis and not a medical diagnosis.");
+
+    const fullText = parts.join('\n');
+    navigator.clipboard.writeText(fullText);
     setCopyFeedback(true);
     setTimeout(() => setCopyFeedback(false), 2000);
   };
@@ -278,8 +310,38 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
   };
 
   const handleDownloadText = () => {
+    // Also use the full text construction for download
+    const parts = [];
+    
+    parts.push("DermaCheck AI Analysis Result");
+    if (confidenceScore !== "N/A") {
+        parts.push(`Confidence Score: ${confidenceScore}`);
+    }
+    parts.push(""); 
+
+    if (abcdeData.length > 0) {
+        parts.push("ABCDE Analysis:");
+        abcdeData.forEach(item => {
+            parts.push(`${item.letter} - ${item.title} [${item.status}]: ${item.summary}`);
+        });
+        parts.push(""); 
+    }
+
+    const strippedReport = cleanText
+      .replace(/#{1,6}\s?/g, '') 
+      .replace(/\*\*/g, '')      
+      .replace(/__/g, '')        
+      .replace(/\*/g, '')        
+      .replace(/^\s*[-]\s/gm, '• ') 
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .trim();
+
+    parts.push("Detailed Assessment:");
+    parts.push(strippedReport);
+    parts.push("\nDisclaimer: This is an AI preliminary analysis and not a medical diagnosis.");
+
     const element = document.createElement("a");
-    const file = new Blob([cleanText], {type: 'text/plain'});
+    const file = new Blob([parts.join('\n')], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
     element.download = "dermacheck-analysis.txt";
     document.body.appendChild(element);
