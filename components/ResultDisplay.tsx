@@ -106,6 +106,7 @@ const processMedicalTerms = (text: string): React.ReactNode[] | string => {
                       e.stopPropagation();
                       window.open(`https://www.google.com/search?q=${encodeURIComponent(part + " skin condition")}`, '_blank');
                   }}
+                  title={`Click to search: ${matchedKey}`}
               >
                   <span className="inline-flex items-baseline gap-0.5 border-b border-indigo-300 border-dashed hover:border-indigo-600 transition-colors">
                     <span className="font-medium text-indigo-700">{part}</span>
@@ -655,24 +656,24 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             <div className="relative bg-white rounded-xl shadow-2xl border border-[#DC143C] w-full max-w-xs sm:max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
                <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                   <h3 className="font-semibold text-slate-800 flex items-center gap-2"><Share2 className="w-4 h-4 text-blue-500" /> Share & Export</h3>
-                  <button onClick={() => setShowShareModal(false)} className="p-1 hover:bg-slate-200 rounded-full transition-colors"><X className="w-5 h-5 text-slate-500" /></button>
+                  <button onClick={() => setShowShareModal(false)} className="p-1 hover:bg-slate-200 rounded-full transition-colors" title="Close modal"><X className="w-5 h-5 text-slate-500" /></button>
                </div>
                <div className="p-4 space-y-3">
                   {navigator.share && (
-                    <button onClick={handleNativeShare} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                    <button onClick={handleNativeShare} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Share via device options">
                        <div className="bg-blue-100 p-2 rounded-full text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors"><Share2 className="w-5 h-5" /></div>
                        <div className="text-left"><div className="font-medium text-slate-700">Share via...</div></div>
                     </button>
                   )}
-                  <button onClick={handleCopyLink} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                  <button onClick={handleCopyLink} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Generate sharable link">
                        <div className="bg-purple-100 p-2 rounded-full text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">{linkCopyFeedback ? <CheckCircle className="w-5 h-5" /> : <Link className="w-5 h-5" />}</div>
                        <div className="text-left"><div className="font-medium text-slate-700">{linkCopyFeedback ? 'Link Copied!' : 'Copy Link'}</div></div>
                   </button>
-                  <button onClick={handleCopy} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                  <button onClick={handleCopy} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Copy text report to clipboard">
                        <div className="bg-teal-100 p-2 rounded-full text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">{copyFeedback ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}</div>
                        <div className="text-left"><div className="font-medium text-slate-700">{copyFeedback ? 'Copied!' : 'Copy Text'}</div></div>
                   </button>
-                  <button onClick={handleGeneratePDF} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                  <button onClick={handleGeneratePDF} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group" title="Download analysis as PDF">
                        <div className="bg-orange-100 p-2 rounded-full text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
                        <div className="text-left"><div className="font-medium text-slate-700">Download PDF Report</div></div>
                   </button>
@@ -697,10 +698,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button onClick={handleGeneratePDF} className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm w-full sm:w-auto ${isGeneralSuspicious ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'}`}>
+              <button onClick={handleGeneratePDF} title="Generate detailed PDF report" className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium shadow-sm w-full sm:w-auto ${isGeneralSuspicious ? 'bg-white border-red-200 text-red-700 hover:bg-red-50' : 'bg-white border-teal-200 text-teal-700 hover:bg-teal-50'}`}>
                  <FileText className="w-4 h-4" /> <span className="whitespace-nowrap">Generate PDF Report</span>
               </button>
-              <button onClick={() => setShowShareModal(true)} className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}><Share2 className="w-5 h-5" /></button>
+              <button onClick={() => setShowShareModal(true)} title="Share or export results" className={`p-2 rounded-full transition-colors ${isGeneralSuspicious ? 'hover:bg-red-100 text-red-700' : 'hover:bg-teal-100 text-teal-700'}`}><Share2 className="w-5 h-5" /></button>
           </div>
         </div>
         
@@ -926,8 +927,8 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
               <>
                 <p className="text-sm text-slate-500 mb-3">Was this analysis helpful?</p>
                 <div className="flex gap-4">
-                  <button onClick={() => handleFeedback('up')} className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-600 transition-all text-sm group"><ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" /> Yes</button>
-                  <button onClick={() => handleFeedback('down')} className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all text-sm group"><ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" /> No</button>
+                  <button onClick={() => handleFeedback('up')} title="Mark as helpful" className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-600 transition-all text-sm group"><ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" /> Yes</button>
+                  <button onClick={() => handleFeedback('down')} title="Mark as not helpful" className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all text-sm group"><ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" /> No</button>
                 </div>
               </>
             ) : (
@@ -944,11 +945,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                     <span className="text-xs font-semibold uppercase tracking-wider">Prevention & Education Resources</span>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
-                    <a href="https://www.skincancer.org/skin-cancer-prevention/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-emerald-400 hover:shadow-md transition-all text-sm group">
+                    <a href="https://www.skincancer.org/skin-cancer-prevention/" title="Open resource" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-emerald-400 hover:shadow-md transition-all text-sm group">
                         <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
                         <span className="font-medium text-slate-700 group-hover:text-emerald-700">Skin Cancer Foundation Guidelines</span>
                     </a>
-                    <a href="https://www.aad.org/public/diseases/skin-cancer/prevent/how" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-emerald-400 hover:shadow-md transition-all text-sm group">
+                    <a href="https://www.aad.org/public/diseases/skin-cancer/prevent/how" title="Open resource" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-emerald-400 hover:shadow-md transition-all text-sm group">
                         <div className="bg-emerald-50 p-1.5 rounded-full text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
                         <span className="font-medium text-slate-700 group-hover:text-emerald-700">AAD Spot Skin Cancer™</span>
                     </a>
@@ -966,7 +967,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                     if (!chunk.web?.uri) return null;
                     const hostname = getHostname(chunk.web.uri);
                     return (
-                    <a key={idx} href={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-blue-400 hover:shadow-md transition-all text-sm group">
+                    <a key={idx} href={chunk.web.uri} target="_blank" title="View source" rel="noopener noreferrer" className="flex items-start gap-3 p-3 rounded-lg bg-white border border-[#DC143C] hover:border-blue-400 hover:shadow-md transition-all text-sm group">
                         <div className="mt-0.5 bg-blue-50 p-1.5 rounded-full text-blue-500 group-hover:bg-blue-600 group-hover:text-white transition-colors"><ExternalLink className="w-3 h-3" /></div>
                         <div className="flex-1 min-w-0">
                             <div className="font-medium text-slate-700 group-hover:text-blue-700 truncate block">{chunk.web.title || hostname}</div>
