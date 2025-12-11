@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2, AlertCircle, PlayCircle, PauseCircle } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
@@ -97,6 +97,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   const recognitionRef = useRef<any>(null);
   const notesValueRef = useRef(notesValue); // Ref to track current notes value for event listeners
   const baseNotesRef = useRef(""); // Ref to store notes at start of recording session
+  
+  // Audio Playback State
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Update ref when prop changes
   useEffect(() => {
@@ -110,12 +117,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     }
   }, []);
 
-  // Clean up camera stream when component unmounts
+  // Clean up camera stream and audio object URLs when component unmounts
   useEffect(() => {
     return () => {
       stopCamera();
       if (recognitionRef.current) {
         try { recognitionRef.current.abort(); } catch(e) {}
+      }
+      if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
       }
     };
   }, []);
@@ -124,9 +134,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
         track.stop();
-        if (track.kind === 'video') {
-            // stopping the track usually turns off the torch automatically
-        }
       });
       streamRef.current = null;
     }
@@ -343,6 +350,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     resetZoom();
     setIsCropping(false);
     onNotesChange?.("");
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+      setAudioUrl(null);
+    }
     onClear();
   };
 
@@ -455,29 +466,60 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   };
 
   // Voice Note Logic
-  const startRecording = () => {
+  const startRecording = async () => {
     setVoiceError(null);
+    if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+        setAudioUrl(null);
+    }
     
-    // Check support
+    // Check Speech Recognition support
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
         setVoiceError("Voice recognition not supported in this browser.");
         return;
     }
 
-    // Abort existing recording if needed to prevent conflict
+    // Abort existing STT
     if (recognitionRef.current) {
         try { recognitionRef.current.abort(); } catch(e) { console.warn(e); }
         recognitionRef.current = null;
     }
 
+    // Start MediaRecorder for audio playback (parallel to STT)
+    try {
+         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+         
+         const mediaRecorder = new MediaRecorder(stream);
+         mediaRecorderRef.current = mediaRecorder;
+         audioChunksRef.current = [];
+
+         mediaRecorder.ondataavailable = (event) => {
+             if (event.data.size > 0) audioChunksRef.current.push(event.data);
+         };
+
+         mediaRecorder.onstop = () => {
+             const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+             const url = URL.createObjectURL(blob);
+             setAudioUrl(url);
+             // Stop stream tracks to release mic
+             stream.getTracks().forEach(t => t.stop());
+         };
+
+         mediaRecorder.start();
+    } catch (e) {
+        console.warn("Audio recording initialization failed", e);
+        setVoiceError("Microphone access failed for audio recording.");
+        return;
+    }
+
+    // Start STT
     try {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'en-US';
 
-        // Snapshot current text base
         baseNotesRef.current = notesValue || "";
 
         recognition.onstart = () => {
@@ -486,21 +528,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
         };
 
         recognition.onresult = (event: any) => {
-            // Reconstruct full session transcript from the event results
-            // 'continuous' mode accumulates results in the list
+            // Reconstruct full session transcript
             let sessionTranscript = '';
             for (let i = 0; i < event.results.length; ++i) {
                 sessionTranscript += event.results[i][0].transcript;
             }
             
-            // Append to the base snapshot
             const currentBase = baseNotesRef.current;
-            // Add a space if the base text is not empty and doesn't end in whitespace
             const separator = (currentBase && !/\s$/.test(currentBase)) ? ' ' : '';
-            
             const newText = currentBase + separator + sessionTranscript;
             
-            // Only update if changed
             if (newText !== notesValueRef.current) {
                 onNotesChange?.(newText);
             }
@@ -509,10 +546,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
         recognition.onerror = (event: any) => {
             console.error("Speech recognition error:", event.error);
             if (event.error === 'not-allowed' || event.error === 'permission-denied') {
-                setVoiceError("Microphone access denied. Please allow permissions.");
+                setVoiceError("Microphone access denied.");
                 setIsRecording(false);
             } else if (event.error === 'no-speech') {
-                // Ignore silent timeouts, keep listening
+                // Ignore silent timeouts
             } else if (event.error === 'aborted') {
                 setIsRecording(false);
             } else {
@@ -522,18 +559,23 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
         };
 
         recognition.onend = () => {
-             // If we stopped naturally, clear flag. 
-             // Note: in continuous mode, it might stop on silence timeouts in some browsers.
              setIsRecording(false);
              recognitionRef.current = null;
+             // Ensure media recorder stops if STT stops naturally
+             if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+                 mediaRecorderRef.current.stop();
+             }
         };
 
         recognitionRef.current = recognition;
         recognition.start();
     } catch (e) {
         console.error("Failed to start speech recognition", e);
-        setVoiceError("Could not start microphone.");
+        setVoiceError("Could not start voice recognition.");
         setIsRecording(false);
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+             mediaRecorderRef.current.stop();
+        }
     }
   };
 
@@ -543,6 +585,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
             recognitionRef.current.stop();
         } catch (e) { console.error(e); }
         setIsRecording(false);
+    }
+    // Backup stop for MediaRecorder if event listener fails
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
     }
   };
 
@@ -554,6 +600,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     }
   };
 
+  const togglePlayback = () => {
+      if (!audioRef.current || !audioUrl) return;
+      if (isPlaying) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+      } else {
+          audioRef.current.play();
+          setIsPlaying(true);
+      }
+  };
+
   const handleNotesChangeLocal = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       onNotesChange?.(e.target.value);
   };
@@ -562,7 +619,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
       onNotesChange?.("");
       baseNotesRef.current = "";
       setVoiceError(null);
-      // If recording, stop it to reset context
+      if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+          setAudioUrl(null);
+      }
+      setIsPlaying(false);
       if (isRecording) {
         stopRecording();
       }
@@ -570,7 +631,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   const handleReRecord = () => {
       handleClearNotes();
-      // Restart recording after a brief tick to allow state to settle
       setTimeout(() => {
           startRecording();
       }, 100);
@@ -601,6 +661,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
              </div>
         )}
 
+        {/* Audio Player Element */}
+        <audio 
+            ref={audioRef} 
+            src={audioUrl || undefined} 
+            onEnded={() => setIsPlaying(false)} 
+            className="hidden" 
+        />
+
         <div className="relative group">
             <textarea
                 value={notesValue}
@@ -620,6 +688,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
             <div className="absolute bottom-3 right-3 flex gap-2">
                 {notesValue && !isRecording && (
                     <>
+                        {audioUrl && (
+                             <button
+                                type="button"
+                                onClick={togglePlayback}
+                                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors shadow-sm border border-indigo-200 text-xs font-bold"
+                                title={isPlaying ? "Pause Recording" : "Review Recording"}
+                            >
+                                {isPlaying ? <PauseCircle className="w-3.5 h-3.5" /> : <PlayCircle className="w-3.5 h-3.5" />}
+                                {isPlaying ? "Pause" : "Review"}
+                            </button>
+                        )}
+
                         <button
                             type="button"
                             onClick={handleClearNotes}

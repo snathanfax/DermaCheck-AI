@@ -48,15 +48,15 @@ Scoring Rubrics:
     - 7-10: Strong resemblance to malignant examples in ISIC archive.
 - **Glasgow Score**: Sum of Major (2pts) and Minor (1pts) criteria present.
 - **Risk Level**: 
-    - High: Glasgow > 3 OR ISIC > 7.
-    - Medium: Glasgow = 2-3 OR ISIC = 4-6.
-    - Low: Glasgow < 2 AND ISIC < 4.
+    - High: (Glasgow > 3) OR (ISIC > 7) OR (HAM10000 predicts Melanoma/Carcinoma).
+    - Medium: (Glasgow = 2-3) OR (ISIC = 4-6) OR (HAM10000 predicts Actinic Keratosis).
+    - Low: (Glasgow < 2) AND (ISIC < 4) AND (HAM10000 predicts Benign/Nevus).
 - **HAM10000 Prediction**: Choose from [Melanocytic nevus, Melanoma, Benign keratosis, Basal cell carcinoma, Actinic keratosis, Vascular lesion, Dermatofibroma].
 - **Summary**: Concise description of visual cues.
 
 Rules for Detailed Report:
 - Use Markdown.
-- **Include "HAM10000 Methodology"**: Explain feature extraction (texture, color, boundary) and centroid comparison.
+- **Include "HAM10000 Methodology"**: Explain feature extraction (e.g., pigment networks for texture, blue-white veil for color, radial streaks for boundary) and centroid comparison.
 - **Include "Glasgow Checklist Analysis"**: Briefly list which points were triggered.
 - **Safety First**: Always err on the side of caution.
 `;

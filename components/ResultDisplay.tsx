@@ -908,7 +908,16 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                             <div className="relative group/tooltip">
                                 <HelpCircle className="w-3 h-3 text-violet-400 cursor-help" />
                                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
-                                    Using a <strong>strong baseline for multi-class classification</strong>, the AI performs <strong>feature extraction</strong> to identify <strong>texture</strong>, <strong>color patterns</strong>, and <strong>boundary characteristics</strong>. It then classifies the lesion by calculating the proximity of these features to the <strong>centroids</strong> of the 10,000 training images in the HAM10000 dataset.
+                                    Using a <strong>strong baseline for multi-class classification</strong>, the AI performs <strong>feature extraction</strong> to identify complex micro-structures.
+                                    <br/><br/>
+                                    It analyzes:
+                                    <ul className="list-disc pl-4 mt-1 space-y-0.5 text-left text-slate-300">
+                                      <li><strong className="text-white">Texture:</strong> Pigment networks, dots, and globules.</li>
+                                      <li><strong className="text-white">Color:</strong> Blue-white veils and irregular pigmentation.</li>
+                                      <li><strong className="text-white">Boundary:</strong> Abrupt cutoffs and streaks.</li>
+                                    </ul>
+                                    <br/>
+                                    It then classifies the lesion by calculating the proximity of these features to the <strong>centroids</strong> of the 10,000 training images in the HAM10000 dataset.
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                                 </div>
                             </div>

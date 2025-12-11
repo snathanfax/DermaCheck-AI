@@ -4,7 +4,7 @@ import { ResultDisplay } from './components/ResultDisplay';
 import { Disclaimer } from './components/Disclaimer';
 import { analyzeImage } from './services/geminiService';
 import { AnalysisResult } from './types';
-import { ListChecks, Loader2, Stethoscope } from 'lucide-react';
+import { ListChecks, Loader2, Stethoscope, Microscope, Activity } from 'lucide-react';
 
 const App: React.FC = () => {
   const [image, setImage] = useState<{ base64: string; mimeType: string } | null>(null);
@@ -147,6 +147,26 @@ const App: React.FC = () => {
                  A weighted checklist checking for:
                  <span className="block mt-1 font-semibold text-slate-600">• Major (Size, Shape, Color)</span>
                  <span className="block font-semibold text-slate-600">• Minor (Diameter, Inflammation, Oozing, Sensation)</span>
+              </p>
+            </div>
+
+            {/* Dermatoscopy Card */}
+            <div className="p-4 bg-white rounded-xl shadow-sm border border-[#DC143C] hover:shadow-md transition-shadow">
+              <div className="text-violet-600 font-bold mb-2 flex items-center gap-2">
+                 <Microscope className="w-4 h-4" /> Dermatoscopy
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                 AI identification of micro-structures typically seen under magnification, such as pigment networks, dots/globules, or blue-white veils.
+              </p>
+            </div>
+
+            {/* Risk Stratification Card */}
+            <div className="p-4 bg-white rounded-xl shadow-sm border border-[#DC143C] hover:shadow-md transition-shadow">
+              <div className="text-fuchsia-600 font-bold mb-2 flex items-center gap-2">
+                 <Activity className="w-4 h-4" /> Risk Stratification
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                 A synthesized risk level (Low, Medium, High) that combines the ISIC score, HAM10000 neural prediction, and Glasgow checklist results.
               </p>
             </div>
 
