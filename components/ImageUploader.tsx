@@ -485,7 +485,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
               <div className="absolute bottom-4 left-0 right-0 z-50 flex items-center justify-center gap-4">
                  <button
                    onClick={() => setIsCropping(false)}
-                   className="flex items-center gap-2 px-4 py-2 bg-red-600/90 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors backdrop-blur-sm text-sm font-medium"
+                   className="flex items-center gap-2 px-4 py-2 bg-[#DC143C]/90 text-white rounded-full shadow-lg hover:bg-[#DC143C] transition-colors backdrop-blur-sm text-sm font-medium"
                  >
                    <X className="w-4 h-4" /> Cancel
                  </button>
@@ -580,6 +580,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                         }}
                         className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105 group relative"
                         title="Crop Image"
+                        aria-label="Crop Image"
                     >
                         <Scissors className="w-5 h-5" />
                         <span className="absolute left-full ml-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">

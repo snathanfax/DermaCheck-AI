@@ -486,6 +486,8 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     const pageCount = doc.getNumberOfPages();
     for(let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
+        
+        // Left and Right Footer
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         doc.setTextColor(128, 128, 128); // Grey
@@ -496,6 +498,15 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
         const pageNumText = `Page ${i} of ${pageCount}`;
         const pageNumWidth = doc.getTextWidth(pageNumText);
         doc.text(pageNumText, pageWidth - margin - pageNumWidth, pageHeight - 10);
+
+        // Center Developer Credit
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6);
+        // doc.setTextColor(128, 128, 128); // Already set to grey, keep it
+        
+        const devText = "Developed by Shaji R. Nathan  snathanfax@gmail.com";
+        const devTextWidth = doc.getTextWidth(devText);
+        doc.text(devText, (pageWidth - devTextWidth) / 2, pageHeight - 10);
     }
 
     doc.save("DermaCheck_Report.pdf");
