@@ -1,13 +1,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import { AnalysisResult } from '../types';
-import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield } from 'lucide-react';
+import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database, BrainCircuit, Activity, Shield, Mic } from 'lucide-react';
 import LZString from 'lz-string';
 import { jsPDF } from "jspdf";
 
 interface ResultDisplayProps {
   result: AnalysisResult;
   image: { base64: string; mimeType: string } | null;
+  patientNotes?: string;
 }
 
 interface ABCDEItem {
@@ -123,7 +124,7 @@ const processMedicalTerms = (text: string): React.ReactNode[] | string => {
   });
 };
 
-export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) => {
+export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, patientNotes }) => {
   const { text, groundingChunks } = result;
   const [showShareModal, setShowShareModal] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState(false);
@@ -280,6 +281,13 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     if (confidenceScore !== "N/A") parts.push(`Confidence Score: ${confidenceScore}`);
     if (isicScore !== "N/A") parts.push(`ISIC Risk Score: ${isicScore}/10`);
     if (hamPrediction !== "N/A") parts.push(`HAM10000 Prediction: ${hamPrediction} (${hamConfidence})`);
+    
+    if (patientNotes) {
+        parts.push("");
+        parts.push("Patient Reported History/Symptoms:");
+        parts.push(patientNotes);
+    }
+    
     parts.push("");
 
     if (abcdeData.length > 0) {
@@ -441,15 +449,30 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
             yPos += 30; 
         }
     } else {
-        // ... (No image logic, similar structure omitted for brevity, adding HAM10000 block)
+        // No image logic
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text("HAM10000 PREDICTION:", margin, yPos + 50); // Simplified position
+        doc.text("HAM10000 PREDICTION:", margin, yPos + 50);
         doc.setFontSize(14);
         doc.setTextColor(0);
         doc.text(hamPrediction !== "N/A" ? hamPrediction : "N/A", margin, yPos + 58);
         yPos += 80;
+    }
+
+    if (patientNotes) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text("Patient Reported History & Symptoms", margin, yPos);
+        yPos += 6;
+        
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(10);
+        doc.setTextColor(60);
+        const notesLines = doc.splitTextToSize(`"${patientNotes}"`, contentWidth);
+        doc.text(notesLines, margin, yPos);
+        yPos += (notesLines.length * 5) + 10;
     }
 
     if (abcdeData.length > 0) {
@@ -460,6 +483,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
         yPos += 8;
 
         abcdeData.forEach((item) => {
+             if (yPos > pageHeight - 40) { doc.addPage(); yPos = 20; }
              doc.setFont("helvetica", "bold");
              doc.setFontSize(10);
              const letterColor = item.status === 'Suspicious' ? [220, 38, 38] : (item.status === 'Benign' ? [22, 163, 74] : [71, 85, 105]);
@@ -478,7 +502,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.setTextColor(0);
-    if (yPos > 250) { doc.addPage(); yPos = 20; }
+    if (yPos > pageHeight - 40) { doc.addPage(); yPos = 20; }
     doc.text("Detailed Assessment", margin, yPos);
     yPos += 8;
 
@@ -490,7 +514,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     const splitReport = doc.splitTextToSize(plainText, contentWidth);
     
     splitReport.forEach((line: string) => {
-        if (yPos > 280) { doc.addPage(); yPos = 20; }
+        if (yPos > pageHeight - 20) { doc.addPage(); yPos = 20; }
         doc.text(line, margin, yPos);
         yPos += 5;
     });
@@ -579,6 +603,10 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                        <div className="bg-teal-100 p-2 rounded-full text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">{copyFeedback ? <CheckCircle className="w-5 h-5" /> : <Copy className="w-5 h-5" />}</div>
                        <div className="text-left"><div className="font-medium text-slate-700">{copyFeedback ? 'Copied!' : 'Copy Text'}</div></div>
                   </button>
+                  <button onClick={handleGeneratePDF} className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all group">
+                       <div className="bg-orange-100 p-2 rounded-full text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors"><FileText className="w-5 h-5" /></div>
+                       <div className="text-left"><div className="font-medium text-slate-700">Download PDF Report</div></div>
+                  </button>
                </div>
             </div>
          </div>
@@ -649,6 +677,19 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                 </div>
             )}
         </div>
+        
+        {/* Patient Notes Display */}
+        {patientNotes && (
+            <div className="px-6 py-4 border-b border-[#DC143C] bg-white">
+                <div className="flex items-start gap-2 text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <Mic className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Patient Reported History</h4>
+                        <p className="text-sm italic">"{patientNotes}"</p>
+                    </div>
+                </div>
+            </div>
+        )}
 
         <div className="px-6 pt-6">
           {/* ABCDE Scorecard */}

@@ -9,9 +9,10 @@ Your goal is to analyze images of skin moles or lesions uploaded by the user.
 Use the standard ABCDE rule (Asymmetry, Border, Color, Diameter, Evolving) to evaluate the lesion.
 
 1.  **Analyze the Image**: Look closely at the visual features.
-2.  **Search Grounding**: Use Google Search to find relevant medical descriptions, similar case studies, or guidelines if you detect specific features.
-3.  **ISIC Comparison**: Compare visual features with patterns typically found in the International Skin Imaging Collaboration (ISIC) Archive datasets.
-4.  **HAM10000 Analysis**: Compare the image against the HAM10000 Dataset (Human Against Machine). Classify the lesion into one of the 7 diagnostic categories:
+2.  **Analyze Patient Notes**: If provided, take the patient's reported symptoms (itching, bleeding, changing size) very seriously, especially for the "Evolving" criterion.
+3.  **Search Grounding**: Use Google Search to find relevant medical descriptions, similar case studies, or guidelines if you detect specific features.
+4.  **ISIC Comparison**: Compare visual features with patterns typically found in the International Skin Imaging Collaboration (ISIC) Archive datasets.
+5.  **HAM10000 Analysis**: Compare the image against the HAM10000 Dataset (Human Against Machine). Classify the lesion into one of the 7 diagnostic categories:
     *   akiec (Actinic keratoses)
     *   bcc (Basal cell carcinoma)
     *   bkl (Benign keratosis-like lesions)
@@ -19,7 +20,7 @@ Use the standard ABCDE rule (Asymmetry, Border, Color, Diameter, Evolving) to ev
     *   mel (Melanoma)
     *   nv (Melanocytic nevi)
     *   vasc (Vascular lesions)
-5.  **Assessment**: Provide a detailed assessment.
+6.  **Assessment**: Provide a detailed assessment.
 
 FORMATTING REQUIREMENTS:
 You MUST start your response with a strict data block for the ABCDE analysis, followed by your detailed report.
@@ -54,8 +55,17 @@ Rules for Detailed Report:
 - **Safety First**: Always err on the side of caution.
 `;
 
-export const analyzeImage = async (base64Image: string, mimeType: string, modelName: string = "gemini-2.5-flash"): Promise<AnalysisResult> => {
+export const analyzeImage = async (
+  base64Image: string, 
+  mimeType: string, 
+  modelName: string = "gemini-2.5-flash",
+  patientNotes?: string
+): Promise<AnalysisResult> => {
   try {
+    const notesContext = patientNotes 
+      ? `\n\nPATIENT REPORTED HISTORY/SYMPTOMS: "${patientNotes}"\nIMPORTANT: Use this information to inform your assessment, particularly the 'Evolving' score if changes or symptoms like itching/bleeding are mentioned.` 
+      : "";
+
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: modelName,
       contents: {
@@ -67,7 +77,7 @@ export const analyzeImage = async (base64Image: string, mimeType: string, modelN
             },
           },
           {
-            text: "Analyze this image of a skin lesion. Apply ABCDE rules. Compare against HAM10000 dataset classes. Is this likely harmless?",
+            text: "Analyze this image of a skin lesion. Apply ABCDE rules. Compare against HAM10000 dataset classes. Is this likely harmless?" + notesContext,
           },
         ],
       },

@@ -2,6 +2,7 @@
   "name": "DermaCheck.AI",
   "description": "An AI-powered assistant that analyzes photos of skin moles using the ABCDE rule and medical search grounding to help you decide if you should see a doctor.",
   "requestFramePermissions": [
-    "camera"
+    "camera",
+    "microphone"
   ]
 }

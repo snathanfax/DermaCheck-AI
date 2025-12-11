@@ -32,4 +32,5 @@ export interface HistoryItem {
     mimeType: string;
   };
   result: AnalysisResult;
+  patientNotes?: string;
 }

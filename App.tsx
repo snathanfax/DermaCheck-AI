@@ -13,6 +13,7 @@ const MODEL_STORAGE_KEY = 'dermacheck_model_v1';
 
 const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<{base64: string, mimeType: string} | null>(null);
+  const [patientNotes, setPatientNotes] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisState>({
     status: 'idle',
     result: null,
@@ -108,12 +109,13 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [analysis.status]);
 
-  const saveToHistory = (imageData: {base64: string, mimeType: string}, result: any) => {
+  const saveToHistory = (imageData: {base64: string, mimeType: string}, result: any, notes: string) => {
     const newItem: HistoryItem = {
       id: Date.now().toString(),
       timestamp: Date.now(),
       imageData,
-      result
+      result,
+      patientNotes: notes
     };
 
     // Use the configured limit
@@ -163,6 +165,7 @@ const App: React.FC = () => {
 
   const loadFromHistory = (item: HistoryItem) => {
     setSelectedImage(item.imageData);
+    setPatientNotes(item.patientNotes || "");
     setAnalysis({
       status: 'success',
       result: item.result,
@@ -186,6 +189,7 @@ const App: React.FC = () => {
 
   const handleClear = () => {
     setSelectedImage(null);
+    setPatientNotes("");
     setAnalysis({ status: 'idle', result: null, error: null });
     setUploaderKey(prev => prev + 1); // Force re-mount of ImageUploader to clear internal state
     
@@ -207,9 +211,9 @@ const App: React.FC = () => {
     setAnalysis({ status: 'analyzing', result: null, error: null });
 
     try {
-      const result = await analyzeImage(selectedImage.base64, selectedImage.mimeType, selectedModel);
+      const result = await analyzeImage(selectedImage.base64, selectedImage.mimeType, selectedModel, patientNotes);
       setAnalysis({ status: 'success', result, error: null });
-      saveToHistory(selectedImage, result);
+      saveToHistory(selectedImage, result, patientNotes);
     } catch (err: any) {
       setAnalysis({ 
         status: 'error', 
@@ -225,7 +229,7 @@ const App: React.FC = () => {
         window.speechSynthesis.cancel();
         setIsSpeaking(false);
       } else {
-        const text = "Welcome to Derma Check AI. Here is how to use this app. Step 1. Upload a clear photo of the skin mole or lesion you want to check. You can choose a file from your device or take a new photo with your camera. Step 2. Once the image is ready, click the 'Run AI Analysis' button. The AI will scan the image using the ABCDE medical guidelines. Step 3. Review your results, which include a detailed assessment and a confidence score. Please remember, this tool provides a preliminary check only. Always consult a medical professional for advice.";
+        const text = "Welcome to Derma Check AI. Here is how to use this app. Step 1. Upload a clear photo of the skin mole or lesion you want to check. You can choose a file from your device or take a new photo with your camera. Step 2. Use the voice note section to describe the mole. Tell us if it's itching, bleeding, or has changed recently, and when you first noticed it. Step 3. Click the 'Run AI Analysis' button. The AI will scan the image and your notes using the ABCDE medical guidelines. Step 4. Review your results, which include a detailed assessment and a confidence score. Please remember, this tool provides a preliminary check only. Always consult a medical professional for advice.";
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.9;
         utterance.pitch = 1;
@@ -488,13 +492,15 @@ const App: React.FC = () => {
             <div className="w-full">
               <div className="flex items-center gap-3 mb-4">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">1</span>
-                <h3 className="font-semibold text-slate-800">Upload Photo</h3>
+                <h3 className="font-semibold text-slate-800">Upload & Describe</h3>
               </div>
               <ImageUploader 
                 key={uploaderKey}
                 onImageSelect={handleImageSelect} 
                 onClear={handleClear} 
                 isAnalyzing={analysis.status === 'analyzing'}
+                onNotesChange={setPatientNotes}
+                notesValue={patientNotes}
               />
 
               {/* ABCDE Info Section */}
@@ -618,8 +624,6 @@ const App: React.FC = () => {
                 </div>
             </div>
           )}
-
-        </div>
 
         {/* History Section */}
         {history.length > 0 && (
