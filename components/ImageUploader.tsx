@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react';
-import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Settings, Monitor, RefreshCw, Mic, MicOff, Trash2 } from 'lucide-react';
+import { Upload, X, Camera, ZoomIn, ZoomOut, Maximize, Move, Wand2, Scissors, Check, Zap, ZapOff, Monitor, RefreshCw, Mic, MicOff, Trash2, RotateCcw, CheckCircle2 } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 
 interface ImageUploaderProps {
@@ -105,7 +105,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
         track.stop();
-        // Reset constraints if needed
         if (track.kind === 'video') {
             // stopping the track usually turns off the torch automatically
         }
@@ -491,47 +490,91 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
       onNotesChange?.("");
   };
 
+  const handleReRecord = () => {
+      handleClearNotes();
+      // Short delay to clear state before starting recording
+      setTimeout(() => {
+          toggleRecording();
+      }, 100);
+  };
+
   const renderNotesSection = () => (
-    <div className="mt-4 animate-in fade-in slide-in-from-bottom-4">
-        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
-            <Mic className="w-4 h-4 text-blue-600" />
-            Patient Notes / Skin Concerns
-        </label>
-        <div className="relative">
+    <div className={`mt-6 animate-in fade-in slide-in-from-bottom-4 transition-all duration-300 ${notesValue ? 'bg-emerald-50/50' : ''} rounded-xl p-2`}>
+        <div className="flex items-center justify-between mb-2 px-1">
+            <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <Mic className="w-4 h-4 text-blue-600" />
+                Patient Notes
+                {notesValue && (
+                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3" /> Ready
+                    </span>
+                )}
+            </label>
+        </div>
+        
+        <div className="relative group">
             <textarea
                 value={notesValue}
                 onChange={handleNotesChangeLocal}
-                placeholder="Describe symptoms (e.g., itching, bleeding, when it started) to help the analysis..."
-                className="w-full p-3 pr-24 text-sm border border-[#DC143C] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px] resize-y bg-white text-slate-700 shadow-sm"
+                placeholder="Describe symptoms (itching, bleeding, changing size)..."
+                className={`w-full p-4 pr-12 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y shadow-sm transition-all outline-none ${
+                    notesValue 
+                    ? 'border-2 border-emerald-400 bg-white text-slate-800' 
+                    : 'border border-slate-300 bg-white text-slate-600'
+                }`}
             />
             
-            <div className="absolute right-2 bottom-2 flex gap-1">
+            {/* Recording Pulse Overlay */}
+            {isRecording && (
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center z-10 border-2 border-red-400">
+                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-2 animate-pulse">
+                        <Mic className="w-6 h-6 text-red-500" />
+                    </div>
+                    <span className="text-sm font-bold text-red-500">Listening...</span>
+                    <button onClick={toggleRecording} className="mt-2 text-xs bg-red-500 text-white px-3 py-1 rounded-full hover:bg-red-600">Stop</button>
+                </div>
+            )}
+            
+            {/* Controls */}
+            <div className="absolute bottom-3 right-3 flex gap-2">
                 {notesValue && (
+                    <>
+                        <button
+                            onClick={handleClearNotes}
+                            className="p-2 rounded-lg bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors shadow-sm border border-slate-200"
+                            title="Delete Notes"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={handleReRecord}
+                            className="flex items-center gap-1 px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors shadow-sm border border-blue-200 text-xs font-bold"
+                            title="Clear and Record New"
+                        >
+                            <RotateCcw className="w-3.5 h-3.5" /> Re-record
+                        </button>
+                    </>
+                )}
+                {!isRecording && (
                     <button
-                        onClick={handleClearNotes}
-                        className="p-2 rounded-full transition-all bg-slate-50 text-slate-400 border border-slate-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
-                        title="Clear Notes"
+                        onClick={toggleRecording}
+                        className={`p-2 rounded-lg transition-all shadow-sm border ${
+                            notesValue
+                            ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
+                            : 'bg-blue-600 text-white border-blue-700 hover:bg-blue-700'
+                        }`}
+                        title="Start Voice Recording"
                     >
-                        <Trash2 className="w-4 h-4" />
+                        <Mic className="w-5 h-5" />
                     </button>
                 )}
-                <button
-                    onClick={toggleRecording}
-                    className={`p-2 rounded-full transition-all border ${
-                        isRecording 
-                        ? 'bg-red-50 text-red-600 border-red-200 animate-pulse' 
-                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200'
-                    }`}
-                    title={isRecording ? "Stop Recording" : "Start Voice Recording"}
-                >
-                    {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                </button>
             </div>
         </div>
-        {isRecording && (
-             <span className="text-xs text-red-500 font-medium mt-1 flex items-center gap-1 animate-pulse">
-                <span className="w-2 h-2 bg-red-500 rounded-full"></span> Listening...
-             </span>
+        
+        {notesValue && (
+            <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1.5 font-medium px-1">
+                <Check className="w-3 h-3" /> Notes will be included in the analysis.
+            </p>
         )}
     </div>
   );
@@ -543,7 +586,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
           
           {/* Crop Mode Overlay */}
           {isCropping ? (
-            <div className="relative w-full h-[400px] bg-black">
+            <div className="relative w-full h-[350px] bg-black">
                 <Cropper
                   image={preview}
                   crop={crop}
@@ -561,13 +604,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                       <button onClick={() => setAspect(undefined)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === undefined ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>Free</button>
                       <button onClick={() => setAspect(1)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 1 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>1:1</button>
                       <button onClick={() => setAspect(4/3)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 4/3 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>4:3</button>
-                      <button onClick={() => setAspect(16/9)} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${aspect === 16/9 ? 'bg-white text-black' : 'text-white hover:bg-white/20'}`}>16:9</button>
                   </div>
                 </div>
 
                 <div className="absolute bottom-4 left-0 right-0 z-50 flex items-center justify-center gap-4">
                   <button onClick={() => setIsCropping(false)} className="flex items-center gap-2 px-4 py-2 bg-[#DC143C]/90 text-white rounded-full shadow-lg hover:bg-[#DC143C] transition-colors backdrop-blur-sm text-sm font-medium"><X className="w-4 h-4" /> Cancel</button>
-                  <button onClick={performCrop} className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm text-sm font-medium"><Check className="w-4 h-4" /> Apply Crop</button>
+                  <button onClick={performCrop} className="flex items-center gap-2 px-4 py-2 bg-green-600/90 text-white rounded-full shadow-lg hover:bg-green-700 transition-colors backdrop-blur-sm text-sm font-medium"><Check className="w-4 h-4" /> Apply</button>
                 </div>
             </div>
           ) : (
@@ -578,23 +620,22 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
                       <button onClick={handleZoomOut} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={scale <= 1} title="Zoom Out"><ZoomOut className="w-4 h-4" /></button>
                       <span className="text-xs font-medium text-white min-w-[32px] text-center font-mono">{Math.round(scale * 100)}%</span>
                       <button onClick={handleZoomIn} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={scale >= 4} title="Zoom In"><ZoomIn className="w-4 h-4" /></button>
-                      <div className="w-px h-4 bg-slate-600 mx-1"></div>
-                      <button onClick={handleResetZoom} className="p-1.5 text-white hover:bg-white/20 rounded-full transition-colors" title="Reset View"><Maximize className="w-4 h-4" /></button>
                   </div>
               )}
 
               <div 
                   className="overflow-hidden w-full h-full relative flex items-center justify-center bg-black"
-                  style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default', minHeight: '200px' }}
+                  style={{ cursor: scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default', minHeight: '180px' }}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseUp}
               >
+                  {/* Reduced Max Height for mobile optimization to show notes below */}
                   <img 
                   src={preview} 
                   alt="Upload preview" 
-                  className="w-full h-auto object-contain max-h-[250px] sm:max-h-[300px] transition-transform duration-100 ease-out will-change-transform"
+                  className="w-full h-auto object-contain max-h-[200px] sm:max-h-[260px] transition-transform duration-100 ease-out will-change-transform"
                   style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})` }}
                   draggable={false}
                   />
@@ -603,20 +644,16 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
               {!isAnalyzing && (
               <>
                   <div className="absolute top-4 left-4 z-20 flex flex-col gap-3">
-                      <button onClick={toggleEnhance} className={`p-2 rounded-full shadow-lg transition-all transform hover:scale-105 ${isEnhanced ? 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-white/50' : 'bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white'}`} title={isEnhanced ? "Revert to Original" : "Auto-Enhance Image"}><Wand2 className="w-5 h-5" /></button>
-                      <button onClick={() => { setIsCropping(true); setCrop({ x: 0, y: 0 }); setCropZoom(1); setAspect(undefined); }} className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105 group relative" title="Crop Image" aria-label="Crop Image"><Scissors className="w-5 h-5" /><span className="absolute left-full ml-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Crop Tool</span></button>
+                      <button onClick={toggleEnhance} className={`p-2 rounded-full shadow-lg transition-all transform hover:scale-105 ${isEnhanced ? 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-white/50' : 'bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white'}`} title={isEnhanced ? "Revert to Original" : "Auto-Enhance Image"}><Wand2 className="w-4 h-4" /></button>
+                      <button onClick={() => { setIsCropping(true); setCrop({ x: 0, y: 0 }); setCropZoom(1); setAspect(undefined); }} className="bg-white/80 backdrop-blur-md text-slate-700 hover:bg-white p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Crop Image"><Scissors className="w-4 h-4" /></button>
                   </div>
-                  <button onClick={clearImage} className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Clear Image"><X className="w-5 h-5" /></button>
+                  <button onClick={clearImage} className="absolute top-4 right-4 z-20 bg-white/80 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-lg transition-all transform hover:scale-105" title="Clear Image"><X className="w-4 h-4" /></button>
               </>
-              )}
-
-              {scale > 1 && !isDragging && (
-                  <div className="absolute top-16 left-4 z-10 bg-black/40 backdrop-blur-sm text-white px-2 py-1 rounded text-[10px] pointer-events-none flex items-center gap-1 animate-in fade-in duration-300"><Move className="w-3 h-3" /> Drag to pan</div>
               )}
             </>
           )}
         </div>
-        {/* Notes Section */}
+        {/* Notes Section - Rendered outside the overflow-hidden image card */}
         {renderNotesSection()}
       </div>
     );

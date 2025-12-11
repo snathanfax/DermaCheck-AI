@@ -628,16 +628,6 @@ const App: React.FC = () => {
                       <h3 className="font-semibold text-slate-800">Analyze</h3>
                     </div>
                     
-                    {patientNotes.trim() && (
-                        <div className="mb-4 bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-                            <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                            <div className="text-sm">
-                                <span className="font-bold text-emerald-800 block">Notes Integrated</span>
-                                <span className="text-emerald-700">Your recorded symptoms will be included in the AI analysis.</span>
-                            </div>
-                        </div>
-                    )}
-
                     <button
                       onClick={handleAnalyze}
                       className="w-full py-4 px-6 rounded-xl font-bold text-lg text-white shadow-lg shadow-blue-200 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-3"
