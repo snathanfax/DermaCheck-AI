@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import { AnalysisResult } from '../types';
-import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText } from 'lucide-react';
+import { ExternalLink, Search, CheckCircle, AlertCircle, HelpCircle, AlertTriangle, Share2, Copy, Download, X, Link, ThumbsUp, ThumbsDown, FileText, Database } from 'lucide-react';
 import LZString from 'lz-string';
 import { jsPDF } from "jspdf";
 
@@ -136,7 +136,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
   }, [result]);
 
   // Parse the strict ABCDE block and the clean text
-  const { abcdeData, cleanText, confidenceScore } = useMemo(() => {
+  const { abcdeData, cleanText, confidenceScore, isicScore } = useMemo(() => {
     // Robust regex to find the block, case-insensitive
     const abcdeRegex = /~ABCDE_START~([\s\S]*?)~ABCDE_END~/i;
     const match = text.match(abcdeRegex);
@@ -144,6 +144,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     let parsedData: ABCDEItem[] = [];
     let remainingText = text;
     let confidence = "N/A";
+    let isic = "N/A";
 
     if (match) {
       const rawData = match[1].trim();
@@ -168,6 +169,15 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
             const scoreMatch = cleanLine.match(/[:\-\.]\s*(.*)/);
             if (scoreMatch) {
                 confidence = scoreMatch[1].trim();
+            }
+            return;
+        }
+
+        // Check for ISIC score
+        if (cleanLine.toLowerCase().includes('isic risk score') || cleanLine.toLowerCase().includes('isic score')) {
+            const scoreMatch = cleanLine.match(/[:\-\.]\s*(\d+)/);
+            if (scoreMatch) {
+                isic = scoreMatch[1].trim();
             }
             return;
         }
@@ -214,7 +224,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
       });
     }
 
-    return { abcdeData: parsedData, cleanText: remainingText, confidenceScore: confidence };
+    return { abcdeData: parsedData, cleanText: remainingText, confidenceScore: confidence, isicScore: isic };
   }, [text]);
 
   // Pre-process text to ensure ABCDE keywords are bolded for the custom renderer
@@ -271,6 +281,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     if (confidenceScore !== "N/A") {
         parts.push(`Confidence Score: ${confidenceScore}`);
     }
+    if (isicScore !== "N/A") {
+        parts.push(`ISIC Risk Score: ${isicScore}/10`);
+    }
     parts.push(""); // spacer
 
     if (abcdeData.length > 0) {
@@ -321,6 +334,9 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     parts.push("DermaCheck AI Analysis Result");
     if (confidenceScore !== "N/A") {
         parts.push(`Confidence Score: ${confidenceScore}`);
+    }
+    if (isicScore !== "N/A") {
+        parts.push(`ISIC Risk Score: ${isicScore}/10`);
     }
     parts.push(""); 
 
@@ -392,6 +408,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
     yPos += 35;
 
     // Image & Confidence Section
+    let imgSectionHeight = 50;
     if (image) {
         try {
             // Ensure data URI format for jsPDF
@@ -442,11 +459,26 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
                 doc.setFillColor(30, 64, 175);
                 doc.rect(textX, barY, (barWidth * percent) / 100, barHeight, 'F');
             }
+            
+            // Add ISIC Score if available
+            if (isicScore !== "N/A") {
+                const isicY = yPos + 40;
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text("ISIC RISK SCORE:", textX, isicY);
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(14);
+                doc.setTextColor(30, 64, 175);
+                doc.text(`${isicScore}/10`, textX, isicY + 8);
+            }
 
-            yPos += Math.max(imgHeight + 15, 50);
+            imgSectionHeight = Math.max(imgHeight + 15, 60);
+            yPos += imgSectionHeight;
         } catch (e) {
             console.error("Error adding image to PDF", e);
-            // If image fails, still show confidence
+            // Fallback for failed image
             doc.setFont("helvetica", "bold");
             doc.setFontSize(10);
             doc.setTextColor(100);
@@ -485,6 +517,18 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
              // Fill bar
              doc.setFillColor(30, 64, 175);
              doc.rect(margin, barY, (barWidth * percent) / 100, barHeight, 'F');
+         }
+         
+         if (isicScore !== "N/A") {
+             const isicY = yPos + 30;
+             doc.setFont("helvetica", "bold");
+             doc.setFontSize(10);
+             doc.setTextColor(100);
+             doc.text("ISIC RISK SCORE:", margin, isicY);
+             doc.setFontSize(14);
+             doc.setTextColor(30, 64, 175);
+             doc.text(`${isicScore}/10`, margin, isicY + 8);
+             yPos += 15;
          }
          
          yPos += 30;
@@ -746,6 +790,40 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image }) =
               </button>
           </div>
         </div>
+        
+        {/* ISIC Comparison Section (New) */}
+        {isicScore !== "N/A" && (
+            <div className="px-6 py-4 border-b border-[#DC143C] bg-indigo-50/50">
+               <div className="flex items-start gap-3">
+                   <div className="bg-indigo-100 p-2 rounded-full text-indigo-600 mt-0.5">
+                       <Database className="w-5 h-5" />
+                   </div>
+                   <div className="flex-1">
+                       <div className="flex justify-between items-center mb-1">
+                           <h3 className="font-semibold text-indigo-900 text-sm">ISIC Comparison Analysis</h3>
+                           <span className="text-xs font-bold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">
+                               Score: {isicScore}/10
+                           </span>
+                       </div>
+                       <p className="text-xs text-indigo-700 mb-2">
+                          Comparison with International Skin Imaging Collaboration Archive patterns. 
+                          {parseInt(isicScore) <= 3 ? " Low resemblance to malignant examples." : 
+                           parseInt(isicScore) <= 6 ? " Moderate features present." : 
+                           " High resemblance to malignant examples in the dataset."}
+                       </p>
+                       <div className="w-full bg-indigo-200 rounded-full h-2 overflow-hidden">
+                          <div 
+                              className={`h-full rounded-full transition-all duration-1000 ${
+                                  parseInt(isicScore) <= 3 ? 'bg-green-500' : 
+                                  parseInt(isicScore) <= 6 ? 'bg-yellow-500' : 'bg-red-500'
+                              }`} 
+                              style={{ width: `${(parseInt(isicScore) / 10) * 100}%` }}
+                          ></div>
+                       </div>
+                   </div>
+               </div>
+            </div>
+        )}
 
         <div className="px-6 pt-6">
           {/* ABCDE Scorecard */}
