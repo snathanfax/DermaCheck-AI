@@ -491,7 +491,7 @@ const App: React.FC = () => {
 
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 sm:p-8 border border-[#DC143C] relative z-10">
           
-          <div className="flex flex-col items-center gap-8">
+          <div className="flex flex-col items-center">
             {/* Step 1: Upload */}
             <div className="w-full">
               <div className="flex items-center gap-3 mb-4">
@@ -510,7 +510,7 @@ const App: React.FC = () => {
 
             {/* Step 2: Action Button or Progress */}
             {selectedImage && (
-              <div className="w-full animate-fade-in-up">
+              <div className="w-full mt-8 pt-6 border-t border-slate-100 animate-fade-in-up">
                 {analysis.status === 'analyzing' ? (
                   <div className="w-full bg-slate-50 rounded-2xl p-6 border border-[#DC143C] shadow-lg shadow-blue-50/50">
                      <div className="flex items-center justify-between mb-3">
@@ -563,7 +563,7 @@ const App: React.FC = () => {
             )}
 
             {/* Advanced Diagnostics Info Section */}
-            <div className="w-full flex flex-col items-center">
+            <div className="w-full flex flex-col items-center mt-8 pt-4 border-t border-slate-100">
               <button
                   onClick={() => setShowAbcdeInfo(!showAbcdeInfo)}
                   className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-all"

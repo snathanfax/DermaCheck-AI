@@ -499,7 +499,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
   };
 
   const renderNotesSection = () => (
-    <div className={`mt-6 animate-in fade-in slide-in-from-bottom-4 transition-all duration-300 ${notesValue ? 'bg-emerald-50/50' : ''} rounded-xl p-2`}>
+    <div className={`mt-6 mb-2 relative z-20 animate-in fade-in slide-in-from-bottom-4 transition-all duration-300 ${notesValue ? 'bg-emerald-50/50' : ''} rounded-xl p-2`}>
         <div className="flex items-center justify-between mb-2 px-1">
             <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
                 <Mic className="w-4 h-4 text-blue-600" />
@@ -581,7 +581,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageSelect, onC
 
   if (preview) {
     return (
-      <div className="w-full max-w-md mx-auto">
+      <div className="w-full max-w-md mx-auto flex flex-col">
         <div className="relative w-full rounded-2xl overflow-hidden shadow-xl border-4 border-[#DC143C] bg-slate-900 group select-none">
           
           {/* Crop Mode Overlay */}
