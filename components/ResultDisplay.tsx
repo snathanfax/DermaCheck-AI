@@ -131,9 +131,11 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
   const [copyFeedback, setCopyFeedback] = useState(false);
   const [linkCopyFeedback, setLinkCopyFeedback] = useState(false);
   const [userFeedback, setUserFeedback] = useState<'up' | 'down' | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     setUserFeedback(null);
+    setSearchTerm("");
   }, [result]);
 
   const { 
@@ -307,6 +309,13 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
       } catch (err) {
         console.log('Error sharing', err);
       }
+    }
+  };
+
+  const handleManualSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(searchTerm + " medical meaning")}`, '_blank');
     }
   };
 
@@ -717,12 +726,14 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                             {/* Tooltip for ISIC */}
                             <div className="relative group/tooltip">
                                 <HelpCircle className="w-3 h-3 text-indigo-400 cursor-help" />
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
-                                    The <strong>ISIC Risk Score (1-10)</strong> quantifies the similarity of the lesion's visual patterns to malignant cases in the International Skin Imaging Collaboration archive.
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
+                                    The <strong>ISIC Risk Score (1-10)</strong> is a probabilistic metric derived from comparing your image against the International Skin Imaging Collaboration (ISIC) Archive.
                                     <br/><br/>
-                                    <span className="text-green-400">1-3:</span> Low Risk (Benign)<br/>
-                                    <span className="text-yellow-400">4-6:</span> Intermediate (Atypical)<br/>
-                                    <span className="text-red-400">7-10:</span> High Similarity to Malignancy
+                                    <ul className="text-left list-disc pl-4 space-y-1">
+                                        <li><strong className="text-green-400">Low (1-3):</strong> Patterns match predominantly benign cases.</li>
+                                        <li><strong className="text-yellow-400">Intermediate (4-6):</strong> Displays features found in both benign and malignant lesions.</li>
+                                        <li><strong className="text-red-400">High (7-10):</strong> Strong visual similarity to confirmed malignant cases in the dataset. Higher scores correlate with a statistically higher probability of malignancy.</li>
+                                    </ul>
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
                                 </div>
                             </div>
@@ -937,7 +948,26 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
           </div>
         </div>
 
-        <div className="bg-slate-50 px-6 py-4 border-t border-[#DC143C] mt-6 rounded-b-xl">
+        {/* Medical Search Bar */}
+        <div className="bg-slate-50 border-t border-[#DC143C] px-6 py-4">
+             <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                 <Search className="w-4 h-4 text-blue-500" /> Medical Term Lookup
+             </h3>
+             <form onSubmit={handleManualSearch} className="flex gap-2">
+                 <input
+                     type="text"
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     placeholder="Search for a medical term..."
+                     className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-slate-700"
+                 />
+                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                     Search
+                 </button>
+             </form>
+        </div>
+
+        <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 mt-0 rounded-b-xl">
             {/* Prevention & Resources Section */}
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3 text-emerald-600">
