@@ -503,95 +503,6 @@ const App: React.FC = () => {
                 onNotesChange={setPatientNotes}
                 notesValue={patientNotes}
               />
-
-              {/* Advanced Diagnostics Info Section */}
-              <div className="mt-4 flex flex-col items-center">
-                <button
-                    onClick={() => setShowAbcdeInfo(!showAbcdeInfo)}
-                    className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-all"
-                >
-                    <Info className="w-4 h-4" />
-                    <span>How does the analysis work? (Methodology)</span>
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showAbcdeInfo ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showAbcdeInfo && (
-                    <div className="mt-3 w-full bg-slate-50 border border-[#DC143C] rounded-xl p-4 text-sm text-slate-600 animate-in fade-in slide-in-from-top-2 space-y-6">
-                        {/* 1. Visual ABCDE */}
-                        <div>
-                            <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
-                                <ScanLine className="w-4 h-4 text-blue-600" /> 1. Visual Inspection (ABCDE Rule)
-                            </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="flex gap-3">
-                                    <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">A</div>
-                                    <div><span className="font-semibold text-slate-800">Asymmetry:</span> Does one half match the other?</div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">B</div>
-                                    <div><span className="font-semibold text-slate-800">Border:</span> Are edges ragged or blurred?</div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">C</div>
-                                    <div><span className="font-semibold text-slate-800">Color:</span> Is the color uneven or multicolored?</div>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">D</div>
-                                    <div><span className="font-semibold text-slate-800">Diameter:</span> Is it larger than a pencil eraser (>6mm)?</div>
-                                </div>
-                                <div className="flex gap-3 sm:col-span-2">
-                                    <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">E</div>
-                                    <div><span className="font-semibold text-slate-800">Evolving:</span> Has it changed size, shape, or color recently?</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {/* 2. Glasgow 7-Point */}
-                        <div>
-                            <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
-                                <ListChecks className="w-4 h-4 text-sky-600" /> 2. Medical Scoring (Glasgow 7-Point Checklist)
-                            </h4>
-                            <p className="mb-2 text-xs text-slate-500">A screening tool used by doctors to determine if referral is needed. A score ≥ 3 suggests referral.</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="bg-sky-50 p-2 rounded-lg border border-sky-100">
-                                    <strong className="block text-sky-800 text-xs uppercase mb-1">Major Criteria (2 pts)</strong>
-                                    <ul className="list-disc pl-4 text-xs space-y-0.5 text-sky-900">
-                                        <li>Change in Size</li>
-                                        <li>Irregular Shape</li>
-                                        <li>Irregular Color</li>
-                                    </ul>
-                                </div>
-                                <div className="bg-sky-50 p-2 rounded-lg border border-sky-100">
-                                    <strong className="block text-sky-800 text-xs uppercase mb-1">Minor Criteria (1 pt)</strong>
-                                    <ul className="list-disc pl-4 text-xs space-y-0.5 text-sky-900">
-                                        <li>Diameter {'>'} 7mm</li>
-                                        <li>Inflammation / Redness</li>
-                                        <li>Oozing / Crusting</li>
-                                        <li>Change in Sensation (Itch)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 3. AI & Dermoscopy */}
-                        <div>
-                            <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
-                                <Microscope className="w-4 h-4 text-violet-600" /> 3. Advanced AI & Structure Analysis
-                            </h4>
-                            <div className="space-y-2 text-xs text-slate-600">
-                                <div className="flex gap-2 items-start">
-                                    <Database className="w-3.5 h-3.5 text-violet-500 mt-0.5 flex-shrink-0" />
-                                    <p><strong className="text-violet-900">HAM10000 & ISIC:</strong> The AI compares features of your image (texture, boundaries, pigment) against thousands of diagnosed clinical images to predict the most likely classification.</p>
-                                </div>
-                                <div className="flex gap-2 items-start">
-                                    <Brain className="w-3.5 h-3.5 text-violet-500 mt-0.5 flex-shrink-0" />
-                                    <p><strong className="text-violet-900">Dermatoscopic Features:</strong> Identifies specific micro-structures usually seen with magnification, such as pigment networks, dots/globules, or blue-white veils.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-              </div>
             </div>
 
             {/* Step 2: Action Button or Progress */}
@@ -647,6 +558,95 @@ const App: React.FC = () => {
                 )}
               </div>
             )}
+
+            {/* Advanced Diagnostics Info Section */}
+            <div className="w-full flex flex-col items-center">
+              <button
+                  onClick={() => setShowAbcdeInfo(!showAbcdeInfo)}
+                  className="flex items-center gap-2 text-sm text-blue-600 font-medium hover:text-blue-700 hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-all"
+              >
+                  <Info className="w-4 h-4" />
+                  <span>How does the analysis work? (Methodology)</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showAbcdeInfo ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showAbcdeInfo && (
+                  <div className="mt-3 w-full bg-slate-50 border border-[#DC143C] rounded-xl p-4 text-sm text-slate-600 animate-in fade-in slide-in-from-top-2 space-y-6">
+                      {/* 1. Visual ABCDE */}
+                      <div>
+                          <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
+                              <ScanLine className="w-4 h-4 text-blue-600" /> 1. Visual Inspection (ABCDE Rule)
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="flex gap-3">
+                                  <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">A</div>
+                                  <div><span className="font-semibold text-slate-800">Asymmetry:</span> Does one half match the other?</div>
+                              </div>
+                              <div className="flex gap-3">
+                                  <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">B</div>
+                                  <div><span className="font-semibold text-slate-800">Border:</span> Are edges ragged or blurred?</div>
+                              </div>
+                              <div className="flex gap-3">
+                                  <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">C</div>
+                                  <div><span className="font-semibold text-slate-800">Color:</span> Is the color uneven or multicolored?</div>
+                              </div>
+                              <div className="flex gap-3">
+                                  <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">D</div>
+                                  <div><span className="font-semibold text-slate-800">Diameter:</span> Is it larger than a pencil eraser (>6mm)?</div>
+                              </div>
+                              <div className="flex gap-3 sm:col-span-2">
+                                  <div className="font-bold text-blue-600 bg-blue-100 w-6 h-6 rounded flex items-center justify-center flex-shrink-0">E</div>
+                                  <div><span className="font-semibold text-slate-800">Evolving:</span> Has it changed size, shape, or color recently?</div>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      {/* 2. Glasgow 7-Point */}
+                      <div>
+                          <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
+                              <ListChecks className="w-4 h-4 text-sky-600" /> 2. Medical Scoring (Glasgow 7-Point Checklist)
+                          </h4>
+                          <p className="mb-2 text-xs text-slate-500">A screening tool used by doctors to determine if referral is needed. A score ≥ 3 suggests referral.</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="bg-sky-50 p-2 rounded-lg border border-sky-100">
+                                  <strong className="block text-sky-800 text-xs uppercase mb-1">Major Criteria (2 pts)</strong>
+                                  <ul className="list-disc pl-4 text-xs space-y-0.5 text-sky-900">
+                                      <li>Change in Size</li>
+                                      <li>Irregular Shape</li>
+                                      <li>Irregular Color</li>
+                                  </ul>
+                              </div>
+                              <div className="bg-sky-50 p-2 rounded-lg border border-sky-100">
+                                  <strong className="block text-sky-800 text-xs uppercase mb-1">Minor Criteria (1 pt)</strong>
+                                  <ul className="list-disc pl-4 text-xs space-y-0.5 text-sky-900">
+                                      <li>Diameter {'>'} 7mm</li>
+                                      <li>Inflammation / Redness</li>
+                                      <li>Oozing / Crusting</li>
+                                      <li>Change in Sensation (Itch)</li>
+                                  </ul>
+                              </div>
+                          </div>
+                      </div>
+
+                      {/* 3. AI & Dermoscopy */}
+                      <div>
+                          <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
+                              <Microscope className="w-4 h-4 text-violet-600" /> 3. Advanced AI & Structure Analysis
+                          </h4>
+                          <div className="space-y-2 text-xs text-slate-600">
+                              <div className="flex gap-2 items-start">
+                                  <Database className="w-3.5 h-3.5 text-violet-500 mt-0.5 flex-shrink-0" />
+                                  <p><strong className="text-violet-900">HAM10000 & ISIC:</strong> The AI compares features of your image (texture, boundaries, pigment) against thousands of diagnosed clinical images to predict the most likely classification.</p>
+                              </div>
+                              <div className="flex gap-2 items-start">
+                                  <Brain className="w-3.5 h-3.5 text-violet-500 mt-0.5 flex-shrink-0" />
+                                  <p><strong className="text-violet-900">Dermatoscopic Features:</strong> Identifies specific micro-structures usually seen with magnification, such as pigment networks, dots/globules, or blue-white veils.</p>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              )}
+            </div>
           </div>
 
           {/* Results Area */}
