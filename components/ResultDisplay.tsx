@@ -46,9 +46,9 @@ const ABCDE_CONTEXT: Record<string, { benign: string; suspicious: string; unknow
     unknown: "Cannot be determined from a single photo. Evolution requires monitoring changes over time or comparison with past photos."
   },
   'Moles': {
-    benign: "Common moles (nevi) are typically small, round, and uniform. They are a normal accumulation of pigment cells and usually remain stable throughout adulthood.",
-    suspicious: "Atypical moles (dysplastic nevi) often look different from your other moles (the 'Ugly Duckling' sign). While not always cancerous, a mole that stands out or looks unusual compared to your peers carries a higher risk.",
-    unknown: "General classification unclear. The lesion does not clearly fit standard categories based on this image alone and may require professional dermatoscopy."
+    benign: "Common moles (nevi) are typically small, round, and uniform accumulations of pigment cells. They usually appear in childhood or early adulthood and remain stable.",
+    suspicious: "Atypical moles (dysplastic nevi) may be larger and irregular. While not always cancerous, they indicate a higher risk phenotype. 'Ugly Ducklings'—moles that look different from your others—warrant closer inspection.",
+    unknown: "General classification unclear. The lesion does not clearly fit standard common mole patterns based on this image alone."
   }
 };
 
@@ -708,11 +708,23 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
         <div className="px-6 py-4 border-b border-[#DC143C] bg-slate-50/50 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* ISIC Score */}
             {isicScore !== "N/A" && (
-                <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 relative group/isic">
                     <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
                             <Database className="w-4 h-4 text-indigo-600" />
                             <h3 className="font-semibold text-indigo-900 text-xs">ISIC Comparison</h3>
+                            {/* Tooltip for ISIC */}
+                            <div className="relative group/tooltip">
+                                <HelpCircle className="w-3 h-3 text-indigo-400 cursor-help" />
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-72 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
+                                    The <strong>ISIC Risk Score (1-10)</strong> quantifies the similarity of the lesion's visual patterns to malignant cases in the International Skin Imaging Collaboration archive.
+                                    <br/><br/>
+                                    <span className="text-green-400">1-3:</span> Low Risk (Benign)<br/>
+                                    <span className="text-yellow-400">4-6:</span> Intermediate (Atypical)<br/>
+                                    <span className="text-red-400">7-10:</span> High Similarity to Malignancy
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                </div>
+                            </div>
                         </div>
                         <span className="text-xs font-bold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded-full">{isicScore}/10</span>
                     </div>
@@ -769,7 +781,7 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
             
             {/* HAM10000 Prediction */}
             {hamPrediction !== "N/A" && (
-                <div className="bg-violet-50/50 p-3 rounded-xl border border-violet-100 relative group sm:col-span-2 lg:col-span-1">
+                <div className="bg-violet-50/50 p-3 rounded-xl border border-violet-100 relative group">
                      <div className="flex justify-between items-center mb-1">
                         <div className="flex items-center gap-2">
                             <BrainCircuit className="w-4 h-4 text-violet-600" />
@@ -788,6 +800,36 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                     <div className="text-xs text-violet-800 font-medium truncate">
                         Matched: <span className="font-bold">{hamPrediction}</span>
                     </div>
+                </div>
+            )}
+
+            {/* Overall Risk Stratification Card */}
+            {riskLevel !== "N/A" && (
+                <div className="bg-fuchsia-50/50 p-3 rounded-xl border border-fuchsia-100 relative group sm:col-span-2 lg:col-span-1">
+                    <div className="flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-fuchsia-600" />
+                            <h3 className="font-semibold text-fuchsia-900 text-xs">Risk Stratification</h3>
+                            <div className="relative group/tooltip">
+                                <HelpCircle className="w-3 h-3 text-fuchsia-400 cursor-help" />
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-center font-normal leading-relaxed">
+                                    A synthesized assessment combining the <strong>ISIC Score</strong>, <strong>Glasgow Checklist</strong>, and <strong>HAM10000 prediction</strong>.
+                                    <br/><br/>
+                                    <ul className="text-left list-disc pl-4 space-y-1">
+                                        <li><strong className="text-green-400">Low:</strong> Consistent with benign features.</li>
+                                        <li><strong className="text-yellow-400">Medium:</strong> Some atypical features; monitoring recommended.</li>
+                                        <li><strong className="text-red-400">High:</strong> Strong indicators of malignancy; immediate evaluation advised.</li>
+                                    </ul>
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${riskLevel === 'High' ? 'bg-red-100 text-red-700 border-red-200' : riskLevel === 'Medium' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-green-100 text-green-700 border-green-200'}`}>{riskLevel}</span>
+                    </div>
+                    <p className="text-[10px] text-fuchsia-800 mt-2 leading-tight">
+                        AI confidence in this stratification: <strong>{confidenceScore}</strong>.
+                        {riskLevel === 'High' ? ' Please consult a dermatologist.' : ' Continue to monitor for changes.'}
+                    </p>
                 </div>
             )}
         </div>

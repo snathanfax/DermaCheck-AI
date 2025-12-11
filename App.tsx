@@ -229,7 +229,7 @@ const App: React.FC = () => {
         window.speechSynthesis.cancel();
         setIsSpeaking(false);
       } else {
-        const text = "Welcome to Derma Check AI. Here is how to use this app. Step 1. Upload a clear photo of the skin mole or lesion you want to check. You can choose a file from your device or take a new photo with your camera. Step 2. Use the voice note section to describe the mole. Tell us if it's itching, bleeding, or has changed recently, and when you first noticed it. Step 3. Click the 'Run AI Analysis' button. The AI will scan the image and your notes using the ABCDE medical guidelines. Step 4. Review your results, which include a detailed assessment and a confidence score. Please remember, this tool provides a preliminary check only. Always consult a medical professional for advice.";
+        const text = "Welcome to Derma Check AI. Here is how to use this app. Step 1. Upload a clear photo of the skin mole or lesion you want to check. You can choose a file from your device or take a new photo with your camera. Step 2. Use the voice note section to describe the mole. Please tell us: When did you first notice it? Has it grown or changed shape? Does it bleed or itch? Do you have a family history of skin cancer? Step 3. Click the 'Run AI Analysis' button. The AI will scan the image and your notes using the ABCDE medical guidelines. Step 4. Review your results, which include a detailed assessment and a confidence score. Please remember, this tool provides a preliminary check only. Always consult a medical professional for advice.";
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.9;
         utterance.pitch = 1;
@@ -290,9 +290,9 @@ const App: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                      {[
-                       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Standard Speed & Accuracy (Recommended)' },
-                       { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro', desc: 'Advanced Reasoning & Complex Tasks' },
-                       { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite', desc: 'Fastest Response Time' }
+                       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Balanced speed & accuracy (Best for general screening)' },
+                       { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro', desc: 'Deep reasoning (Best for complex/ambiguous cases)' },
+                       { id: 'gemini-flash-lite-latest', name: 'Gemini Flash Lite', desc: 'Ultra-fast (Good for quick checks)' }
                      ].map((model) => (
                         <button
                            key={model.id}
