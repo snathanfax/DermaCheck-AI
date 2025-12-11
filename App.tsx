@@ -297,7 +297,7 @@ const App: React.FC = () => {
 
         <Disclaimer />
 
-        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 sm:p-8 border border-slate-100 relative z-10">
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 sm:p-8 border border-[#DC143C] relative z-10">
           
           <div className="flex flex-col items-center gap-8">
             {/* Step 1: Upload */}
