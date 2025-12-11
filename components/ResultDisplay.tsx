@@ -1024,22 +1024,35 @@ export const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, image, pat
                             {/* Tooltip Icon */}
                             <div className="relative group/tooltip">
                                 <HelpCircle className="w-3 h-3 text-violet-400 cursor-help" />
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-96 p-4 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-left font-normal leading-relaxed">
-                                    <p className="mb-2">The AI utilizes a deep learning model trained on the <strong>HAM10000 dataset</strong> (10,000+ dermatoscopic images).</p>
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-[28rem] p-5 bg-slate-900/95 backdrop-blur text-white text-xs rounded-xl shadow-2xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-50 text-left font-normal leading-relaxed border border-slate-700">
+                                    <h4 className="font-bold text-violet-300 text-sm mb-3 border-b border-violet-800 pb-2">Methodology: Deep Learning Analysis</h4>
                                     
-                                    <strong className="block text-violet-300 mb-1">1. Feature Extraction:</strong>
-                                    <p className="mb-1 text-slate-300">The neural network dissects the image into high-dimensional vectors, analyzing specific micro-structures:</p>
-                                    <ul className="list-disc pl-4 mb-2 space-y-1 text-slate-300">
-                                      <li><strong className="text-white">Texture & Pattern:</strong> Reticular pigment networks, chaotic dots/globules, and structureless zones.</li>
-                                      <li><strong className="text-white">Color Variance:</strong> Blue-white veils (depth indicator), regression structures (white scarring), and multi-shade pigmentation.</li>
-                                      <li><strong className="text-white">Boundary Metrics:</strong> Edge abruptness, radial streaming, and pseudopods.</li>
-                                    </ul>
+                                    <div className="mb-4">
+                                        <strong className="block text-white mb-1.5 flex items-center gap-2"><Microscope className="w-3 h-3 text-violet-400"/> Feature Extraction (Convolutional Neural Network)</strong>
+                                        <p className="mb-2 text-slate-300 text-[11px]">The model processes the image through multiple convolutional layers to identify dermatoscopic biomarkers invisible to the naked eye:</p>
+                                        <ul className="grid grid-cols-1 gap-1.5 pl-1 text-[11px] text-slate-300">
+                                          <li className="flex items-start gap-2">
+                                             <span className="w-1 h-1 rounded-full bg-violet-500 mt-1.5 shrink-0"></span>
+                                             <span><strong className="text-violet-200">Texture & Pattern:</strong> Analyzes the pigment network thickness, looking for atypical broadened lines, reticular lines, or "broken" net structures.</span>
+                                          </li>
+                                          <li className="flex items-start gap-2">
+                                             <span className="w-1 h-1 rounded-full bg-violet-500 mt-1.5 shrink-0"></span>
+                                             <span><strong className="text-violet-200">Color Variance:</strong> Maps pixel-level color variance (e.g., blue-white veils, red vascularity) to detect regression or deep invasion.</span>
+                                          </li>
+                                          <li className="flex items-start gap-2">
+                                             <span className="w-1 h-1 rounded-full bg-violet-500 mt-1.5 shrink-0"></span>
+                                             <span><strong className="text-violet-200">Boundary Architecture:</strong> Evaluates edge abruptness, detecting "pseudopods", starburst patterns, or radial streaming streaks.</span>
+                                          </li>
+                                        </ul>
+                                    </div>
                                     
-                                    <strong className="block text-violet-300 mb-1">2. Centroid Analysis:</strong>
-                                    <p className="text-slate-300">
-                                      Your lesion's feature vector is mapped into latent space. The model calculates the statistical distance (similarity) to the <strong>centroids</strong> (average representations) of known classes like Melanoma or Nevus. The closest match determines the classification.
-                                    </p>
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900"></div>
+                                    <div>
+                                        <strong className="block text-white mb-1.5 flex items-center gap-2"><Database className="w-3 h-3 text-violet-400"/> Centroid Classification Logic</strong>
+                                        <p className="text-slate-300 text-[11px]">
+                                          The extracted feature vector is mapped into a high-dimensional latent space. The AI calculates the <strong className="text-violet-200">Euclidean distance</strong> between your lesion's vector and the pre-computed <strong>centroids</strong> (mathematical averages) of the 7 standard diagnostic categories (e.g., Melanoma, Nevus, BCC) in the HAM10000 dataset.
+                                        </p>
+                                    </div>
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-900/95"></div>
                                 </div>
                             </div>
                         </div>
